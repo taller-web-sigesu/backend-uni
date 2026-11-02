@@ -1,0 +1,12 @@
+# Artefactos de compilación local
+target
+
+# Metadatos, secretos y configuración local
+.git
+.env
+.env.*
+.idea
+.vscode
+
+# Logs locales
+*.log

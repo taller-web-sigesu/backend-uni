@@ -1,0 +1,21 @@
+FROM maven:3.9.16-eclipse-temurin-21
+
+USER root
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --user-group --shell /bin/sh app
+
+WORKDIR /workspace
+RUN mkdir -p /workspace/target /home/app/.m2 \
+    && chown -R app:app /workspace /home/app/.m2
+ENV MAVEN_CONFIG=/home/app/.m2
+
+COPY --chown=app:app pom.xml ./pom.xml
+USER app
+RUN mvn --batch-mode --no-transfer-progress dependency:go-offline
+
+EXPOSE 8080
+
+ENTRYPOINT ["mvn"]
+CMD ["--batch-mode", "--no-transfer-progress", "spring-boot:run", "-Dspring-boot.run.fork=true"]
