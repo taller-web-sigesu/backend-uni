@@ -1,6 +1,6 @@
 # Arquitectura del backend — backend-uni
 
-> **Estado:** aplicación Spring Boot base implementada en código; módulos de negocio pendientes.
+> **Estado:** aplicación Spring Boot base implementada; plan de implementación aprobado, módulos de negocio pendientes.
 > **Última actualización:** 2026-11-02.
 > **Alcance:** API, reglas de negocio, autorización y persistencia.
 
@@ -108,12 +108,25 @@ El [diseño de base de datos](../infra-uni/DISENIO-BD.md) existe como documento 
 
 Estos controles describen el objetivo, no capacidades de la API base actual. Formalizar permisos en `docs/SECURITY.md` al implementarlos y coordinar la sesión con frontend.
 
+## Plan de implementación
+
+El plan aprobado está en [`infra-uni/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md`](../infra-uni/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md). Orden de trabajo:
+
+1. **Contratos:** `docs/api/openapi.yaml`, `docs/SECURITY.md`, `docs/DATABASE.md`, formato de errores, paginación y fechas UTC.
+2. **Fundaciones:** Spring Security, Bean Validation, Flyway, springdoc, Micrometer Tracing y Testcontainers; `shared` con errores, correlación, CORS y seguridad; Actuator protegido.
+3. **Migraciones:** `V1__esquema_inicial.sql`, `V2__catalogos_semilla.sql` y `V3__datos_demostracion.sql` opcional, derivadas de `DISENIO-BD.md`.
+4. **Módulos:** `auth` (HU-01/HU-02), `users` y `catalogs` (HU-15 a HU-18), `requests` (HU-03 a HU-06), `management` (HU-07 a HU-11), `dashboard` (HU-12 a HU-14), auditoría/encuesta (HU-19/HU-20) y `reservations` (HU-21 a HU-25).
+5. **Pruebas:** JUnit 5 + Mockito y Spring Boot Test + Testcontainers MySQL; autorización por recurso, transiciones inválidas y migraciones.
+6. **Producción:** `Dockerfile` de producción, healthcheck, imágenes versionadas y workflow CI con `mvn verify`.
+
+**Decisiones relacionadas:** [ADR-0002](../infra-uni/docs/adr/ADR-0002-autenticacion-sesion.md) (sesión), [ADR-0003](../infra-uni/docs/adr/ADR-0003-observabilidad-retencion.md) (observabilidad) y [ADR-0005](../infra-uni/docs/adr/ADR-0005-ci-cd-calidad.md) (CI/CD).
+
 ## Desarrollo, observabilidad y pruebas
 
 Usar el entorno descrito en [DOCKER.md](../infra-uni/docs/DOCKER.md). En el contenedor backend, `mvn compile` genera clases y DevTools detecta los cambios. MySQL y los secretos de desarrollo se configuran desde infraestructura.
 
-Actuator de salud ya está configurado. Métricas Micrometer, logs estructurados, correlación, trazas y alertas son objetivos pendientes; proteger endpoints administrativos y evitar datos sensibles en logs.
+Actuator de salud ya está configurado. Métricas Micrometer, logs estructurados, correlación, trazas y alertas son objetivos pendientes; proteger endpoints administrativos y evitar datos sensibles en logs. Ver [ADR-0003](../infra-uni/docs/adr/ADR-0003-observabilidad-retencion.md).
 
 Herramientas propuestas: JUnit 5 + Mockito para reglas, Spring Boot Test + Testcontainers MySQL para persistencia/API, análisis estático y de dependencias, SAST/DAST controlado y k6 para carga. Cubrir permisos por recurso, transiciones, validaciones, transacciones y migraciones. No hay suite configurada actualmente.
 
-CI objetivo: compilación, unitarias, integración con MySQL de prueba, análisis, imagen Docker, staging y smoke tests. Un `Dockerfile` de producción sigue pendiente; el actual es `Dockerfile.dev`. No afirmar resultados sin ejecutarlos y revisar su salida.
+CI objetivo: compilación, unitarias, integración con MySQL de prueba, análisis, imagen Docker, staging y smoke tests (ver [ADR-0005](../infra-uni/docs/adr/ADR-0005-ci-cd-calidad.md)). Un `Dockerfile` de producción sigue pendiente; el actual es `Dockerfile.dev`. No afirmar resultados sin ejecutarlos y revisar su salida.
