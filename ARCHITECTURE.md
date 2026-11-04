@@ -35,11 +35,12 @@ La revisión de archivos no confirma compilación, ejecución ni conexión real 
 | `management` | Evaluación, asignación, transición de estados, comentarios e historial | Máquina de estados; cambios e historial en la misma transacción |
 | `catalogs` | Categorías, prioridades, áreas y estados configurables | Restringir operaciones administrativas; preservar integridad histórica |
 | `dashboard` | Agregaciones y reportes de atención | Métricas desde datos reales, con filtros y definiciones documentadas |
+| `reservations` | Espacios, horarios, disponibilidad, reservas, aprobación y cancelación | Solapamientos validados en transacción; aprueba el supervisor del área o el administrador |
 | `shared` | Seguridad común, configuración, errores y observabilidad | Sin reglas de negocio específicas del dominio |
 
 Cada módulo debe separar entrada HTTP (controller/DTO), aplicación (service), dominio/persistencia (entity/repository) y pruebas. Un controller no ejecuta directamente reglas complejas ni consultas SQL ad hoc. Un DTO público no debe ser una entidad JPA expuesta.
 
-**API REST:** prefijo `/api/v1`; endpoints de referencia `POST /auth/login`, `POST /auth/register`, `GET|POST /requests`, `GET /requests/{id}`, `PATCH /requests/{id}/status`, `POST /requests/{id}/assignments`, `GET /dashboard/summary`, `/admin/users` y `/admin/catalogs` (rutas finales sujetas a OpenAPI). Usar códigos HTTP y estructura de errores consistentes; paginar listas y limitar filtros/ordenación.
+**API REST:** prefijo `/api/v1`; endpoints de referencia `POST /auth/login`, `POST /auth/register`, `GET|POST /requests`, `GET /requests/{id}`, `PATCH /requests/{id}/status`, `POST /requests/{id}/assignments`, `GET /dashboard/summary`, `/admin/users` y `/admin/catalogs` (rutas finales sujetas a OpenAPI). Usar códigos HTTP y estructura de errores consistentes; paginar listas y limitar filtros/ordenación. Reservas de ambientes (EP-07): `GET /spaces`, `POST /reservations`, `GET /reservations/{id}`, `PATCH /reservations/{id}/approve`, `PATCH /reservations/{id}/reject`, `PATCH /reservations/{id}/cancel` y `/admin/spaces` (rutas finales sujetas a OpenAPI).
 
 **Estados obligatorios del proyecto:** `Nuevo → Asignado → En proceso → Resuelto → Cerrado`, con `Rechazado` como estado final alternativo. La matriz de transiciones por rol se define en la tabla `transiciones_estado`; saltos, reaperturas y cancelaciones requieren regla de negocio explícita en historia aprobada; no los inventa un agente.
 
@@ -54,6 +55,7 @@ src/main/java/pe/edu/universidad/servicios/
 ├── requests/
 ├── management/
 ├── catalogs/
+├── reservations/
 ├── dashboard/
 └── shared/
 src/main/resources/db/migration/  # Migraciones Flyway previstas
@@ -73,9 +75,10 @@ Cada módulo mantiene sus controllers/DTO, services y entities/repositories; cre
 - **Motor:** **MySQL**, indicado explícitamente en la propuesta académica.
 - **Uso:** cuentas, roles, solicitudes, catálogos, asignaciones, estados, comentarios, referencias de evidencias e historial.
 - **Tablas candidatas:** `roles`, `usuarios`, `sesiones_usuario`, `areas`, `prioridades`, `categorias`, `estados_solicitud`, `transiciones_estado`, `politicas_sla`, `solicitudes`, `historial_estados`, `asignaciones`, `comentarios`, `encuestas_satisfaccion`, `auditoria_eventos` y `secuencias_codigo_solicitud`; `adjuntos_solicitud` solo si se aprueba la carga de evidencias.
+- **Reservas de ambientes (EP-07):** `tipos_espacio`, `espacios`, `horarios_espacio`, `estados_reserva`, `politicas_reserva`, `reservas`, `historial_estados_reserva` y `secuencias_codigo_reserva`.
 - **Integridad:** claves foráneas, índices para búsquedas reales, unicidad de correo/código, transacciones y migraciones Flyway versionadas.
 - **Propiedad:** backend; no consultas directas a MySQL desde React.
-- **Origen del esquema:** `backend-uni/src/main/resources/db/migration/`; el diseño vigente se documenta en `infra-uni/DISEÑO-BD.md` y, cuando existan, las migraciones representarán la estructura implementada.
+- **Origen del esquema:** `backend-uni/src/main/resources/db/migration/`; el diseño vigente se documenta en `infra-uni/DISENIO-BD.md` y, cuando existan, las migraciones representarán la estructura implementada.
 
 ### Evidencias adjuntas
 
@@ -87,7 +90,7 @@ Cada módulo mantiene sus controllers/DTO, services y entities/repositories; cre
 
 No se requiere Redis, Elasticsearch, RabbitMQ, un almacén analítico ni una segunda base de datos para el MVP. Toda adición requiere una necesidad medida y un ADR.
 
-El [diseño de base de datos](../infra-uni/DISEÑO-BD.md) existe como documento compartido. `docs/DATABASE.md` y las migraciones aún están pendientes; las migraciones serán la referencia del esquema implementado. La configuración actual no crea tablas automáticamente.
+El [diseño de base de datos](../infra-uni/DISENIO-BD.md) existe como documento compartido. `docs/DATABASE.md` y las migraciones aún están pendientes; las migraciones serán la referencia del esquema implementado. La configuración actual no crea tablas automáticamente.
 
 ## Seguridad objetivo
 
