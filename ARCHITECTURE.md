@@ -6,7 +6,7 @@
 
 ## Referencias y propiedad
 
-La [arquitectura global](../infra-uni/docs/ARCHITECTURE.md) define los límites y decisiones compartidas. Este documento posee la arquitectura interna del backend. Leer [AGENTS.md](AGENTS.md) y la historia correspondiente en [user-stories](../infra-uni/docs/requirements/user-stories/) antes de cambiar comportamiento.
+La [arquitectura global](../infra-uni/docs/ARCHITECTURE.md) define los límites y decisiones compartidas. El [diseño del backend](docs/BACKEND-DISENIO.md) detalla los archivos propuestos por módulo y su relación con las rutas. Leer [AGENTS.md](AGENTS.md) y la historia correspondiente en [user-stories](../infra-uni/docs/requirements/user-stories/) antes de cambiar comportamiento.
 
 ## Estado actual comprobado en archivos
 
@@ -29,22 +29,24 @@ La revisión de archivos no confirma compilación, ejecución ni conexión real 
 
 | Módulo lógico | Responsabilidad | Restricciones importantes |
 | --- | --- | --- |
-| `auth` | Registro, autenticación y emisión/validación de credenciales | Contraseñas hasheadas y errores sin filtrar información sensible |
+| `auth` | Inicio, renovación y cierre de sesión, y cambio de contraseña | Contraseñas hasheadas y errores sin filtrar información sensible |
 | `users` | Perfil, usuarios y roles | RBAC; usuarios no se asignan roles privilegiados a sí mismos |
-| `requests` | Crear, listar, consultar, editar datos permitidos y evidencias | Consultar solo recursos propios o autorizados |
-| `management` | Evaluación, asignación, transición de estados, comentarios e historial | Máquina de estados; cambios e historial en la misma transacción |
+| `requests` | Registro, bandejas, detalle, historial, comentarios y satisfacción | Consultar solo recursos propios o autorizados |
+| `management` | Asignación, prioridad y transición de estados | Coordina los cambios mediante los servicios de solicitudes |
 | `catalogs` | Categorías, prioridades, áreas y estados configurables | Restringir operaciones administrativas; preservar integridad histórica |
 | `dashboard` | Agregaciones y reportes de atención | Métricas desde datos reales, con filtros y definiciones documentadas |
+| `sla` | Configuración y resolución de plazos | Precedencia por categoría y conservación del plazo asignado |
+| `audit` | Registro y consulta de cambios de negocio | Eventos dentro de la transacción y consultas con alcance autorizado |
 | `reservations` | Espacios, horarios, disponibilidad, reservas, aprobación y cancelación | Solapamientos validados en transacción; aprueba el supervisor del área o el administrador |
 | `shared` | Seguridad común, configuración, errores y observabilidad | Sin reglas de negocio específicas del dominio |
 
 Cada módulo debe separar entrada HTTP (controller/DTO), aplicación (service), dominio/persistencia (entity/repository) y pruebas. Un controller no ejecuta directamente reglas complejas ni consultas SQL ad hoc. Un DTO público no debe ser una entidad JPA expuesta.
 
-**API REST:** prefijo `/api/v1`; endpoints de referencia `POST /auth/login`, `POST /auth/register`, `GET|POST /requests`, `GET /requests/{id}`, `PATCH /requests/{id}/status`, `POST /requests/{id}/assignments`, `GET /dashboard/summary`, `/admin/users` y `/admin/catalogs` (rutas finales sujetas a OpenAPI). Usar códigos HTTP y estructura de errores consistentes; paginar listas y limitar filtros/ordenación. Reservas de ambientes (EP-07): `GET /spaces`, `POST /reservations`, `GET /reservations/{id}`, `PATCH /reservations/{id}/approve`, `PATCH /reservations/{id}/reject`, `PATCH /reservations/{id}/cancel` y `/admin/spaces` (rutas finales sujetas a OpenAPI).
+La API REST usa el prefijo `/api/v1`. Las rutas propuestas, su seguridad y sus ejemplos están en el [diseño de API por negocio](docs/API-DISENIO.md).
 
 **Estados obligatorios del proyecto:** `Nuevo → Asignado → En proceso → Resuelto → Cerrado`, con `Rechazado` como estado final alternativo. La matriz de transiciones por rol se define en la tabla `transiciones_estado`; saltos, reaperturas y cancelaciones requieren regla de negocio explícita en historia aprobada; no los inventa un agente.
 
-Los endpoints de negocio anteriores son referencias futuras. El contrato oficial se mantendrá en `docs/api/openapi.yaml` cuando se implemente; no darlo por existente.
+El contrato aprobado se mantendrá en `docs/api/openapi.yaml` cuando se implemente.
 
 ## Organización objetivo
 
@@ -57,6 +59,9 @@ src/main/java/pe/edu/universidad/servicios/
 ├── catalogs/
 ├── reservations/
 ├── dashboard/
+├── sla/
+├── audit/
+├── status/
 └── shared/
 src/main/resources/db/migration/  # Migraciones Flyway previstas
 src/test/                        # Pruebas previstas
