@@ -6,7 +6,7 @@
 
 ## Referencias y propiedad
 
-La [arquitectura global](../infra-uni/docs/ARCHITECTURE.md) define los límites y decisiones compartidas. El [diseño del backend](docs/BACKEND-DISENIO.md) detalla los archivos propuestos por módulo y su relación con las rutas. Leer [AGENTS.md](AGENTS.md) y la historia correspondiente en [user-stories](../infra-uni/docs/requirements/user-stories/) antes de cambiar comportamiento.
+La [arquitectura global](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/ARCHITECTURE.md) define los límites y decisiones compartidas. El [diseño del backend](docs/BACKEND-DISENIO.md) detalla los archivos propuestos por módulo y su relación con las rutas. Leer [AGENTS.md](AGENTS.md) y la historia correspondiente en [user-stories](https://github.com/taller-web-sigesu/infra-uni/tree/main/docs/requirements/user-stories) antes de cambiar comportamiento.
 
 ## Estado actual comprobado en archivos
 
@@ -95,7 +95,7 @@ Cada módulo mantiene sus controllers/DTO, services y entities/repositories; cre
 
 No se requiere Redis, Elasticsearch, RabbitMQ, un almacén analítico ni una segunda base de datos para el MVP. Toda adición requiere una necesidad medida y un ADR.
 
-El [diseño de base de datos](../infra-uni/DISENIO-BD.md) existe como documento compartido. `docs/DATABASE.md` y las migraciones aún están pendientes; las migraciones serán la referencia del esquema implementado. La configuración actual no crea tablas automáticamente.
+El [diseño de base de datos](https://github.com/taller-web-sigesu/infra-uni/blob/main/DISENIO-BD.md) existe como documento compartido. `docs/DATABASE.md` y las migraciones aún están pendientes; las migraciones serán la referencia del esquema implementado. La configuración actual no crea tablas automáticamente.
 
 ## Seguridad objetivo
 
@@ -115,7 +115,7 @@ Estos controles describen el objetivo, no capacidades de la API base actual. For
 
 ## Plan de implementación
 
-El plan aprobado está en [`infra-uni/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md`](../infra-uni/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md). Orden de trabajo:
+El plan aprobado está en [`infra-uni/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md`](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md). Orden de trabajo:
 
 1. **Contratos:** `docs/api/openapi.yaml`, `docs/SECURITY.md`, `docs/DATABASE.md`, formato de errores, paginación y fechas UTC.
 2. **Fundaciones:** Spring Security, Bean Validation, Flyway, springdoc, Micrometer Tracing y Testcontainers; `shared` con errores, correlación, CORS y seguridad; Actuator protegido.
@@ -124,14 +124,14 @@ El plan aprobado está en [`infra-uni/docs/superpowers/plans/2026-11-04-ingenier
 5. **Pruebas:** JUnit 5 + Mockito y Spring Boot Test + Testcontainers MySQL; autorización por recurso, transiciones inválidas y migraciones.
 6. **Producción:** `Dockerfile` de producción, healthcheck, imágenes versionadas y workflow CI con `mvn verify`.
 
-**Decisiones relacionadas:** [ADR-0002](../infra-uni/docs/adr/ADR-0002-autenticacion-sesion.md) (sesión), [ADR-0003](../infra-uni/docs/adr/ADR-0003-observabilidad-retencion.md) (observabilidad) y [ADR-0005](../infra-uni/docs/adr/ADR-0005-ci-cd-calidad.md) (CI/CD).
+**Decisiones relacionadas:** [ADR-0002](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0002-autenticacion-sesion.md) (sesión), [ADR-0003](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0003-observabilidad-retencion.md) (observabilidad) y [ADR-0005](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0005-ci-cd-calidad.md) (CI/CD).
 
 ## Desarrollo, observabilidad y pruebas
 
-Usar el entorno descrito en [DOCKER.md](../infra-uni/docs/DOCKER.md). En el contenedor backend, `mvn compile` genera clases y DevTools detecta los cambios. MySQL y los secretos de desarrollo se configuran desde infraestructura.
+Usar el entorno descrito en [DOCKER.md](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/DOCKER.md). En el contenedor backend, `mvn compile` genera clases y DevTools detecta los cambios. MySQL y los secretos de desarrollo se configuran desde infraestructura.
 
-Actuator de salud ya está configurado. Métricas Micrometer, logs estructurados, correlación, trazas y alertas son objetivos pendientes; proteger endpoints administrativos y evitar datos sensibles en logs. Ver [ADR-0003](../infra-uni/docs/adr/ADR-0003-observabilidad-retencion.md).
+Actuator de salud ya está configurado. Métricas Micrometer, logs estructurados, correlación, trazas y alertas son objetivos pendientes; proteger endpoints administrativos y evitar datos sensibles en logs. Ver [ADR-0003](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0003-observabilidad-retencion.md).
 
 Herramientas propuestas: JUnit 5 + Mockito para reglas, Spring Boot Test + Testcontainers MySQL para persistencia/API, análisis estático y de dependencias, SAST/DAST controlado y k6 para carga. Cubrir permisos por recurso, transiciones, validaciones, transacciones y migraciones. No hay suite configurada actualmente.
 
-CI objetivo: compilación, unitarias, integración con MySQL de prueba, análisis, imagen Docker, staging y smoke tests (ver [ADR-0005](../infra-uni/docs/adr/ADR-0005-ci-cd-calidad.md)). Un `Dockerfile` de producción sigue pendiente; el actual es `Dockerfile.dev`. No afirmar resultados sin ejecutarlos y revisar su salida.
+CI objetivo: compilación, unitarias, integración con MySQL de prueba, análisis, imagen Docker, staging y smoke tests (ver [ADR-0005](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0005-ci-cd-calidad.md)). Un `Dockerfile` de producción sigue pendiente; el actual es `Dockerfile.dev`. No afirmar resultados sin ejecutarlos y revisar su salida.

@@ -2,7 +2,7 @@
 
 **Objetivo.** Implementar HU-21 a HU-25 con disponibilidad, administración, decisiones y cancelación consistentes bajo concurrencia.
 
-**Entrada.** Identidad y permisos de la [fase 01](01-fundaciones-y-sesion.md), catálogos y auditoría de la [fase 02](02-solicitudes-atencion-y-reportes.md). Consultar el [contrato de reservas](../api/reservas.md), el [ADR de ambientes](../../../infra-uni/docs/adr/ADR-0001-reserva-ambientes.md) y las reglas de reservas del [diseño de datos](../../../infra-uni/DISENIO-BD.md).
+**Entrada.** Identidad y permisos de la [fase 01](01-fundaciones-y-sesion.md), catálogos y auditoría de la [fase 02](02-solicitudes-atencion-y-reportes.md). Consultar el [contrato de reservas](../api/reservas.md), el [ADR de ambientes](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0001-reserva-ambientes.md) y las reglas de reservas del [diseño de datos](https://github.com/taller-web-sigesu/infra-uni/blob/main/DISENIO-BD.md).
 
 ## Tareas
 

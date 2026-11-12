@@ -20,9 +20,9 @@ La entrega termina en **Docker local y CI**. Staging, producción, proveedores, 
 
 ## Fuentes
 
-- Alcance, roles y reglas de negocio. [Historias de usuario](../../../infra-uni/docs/requirements/user-stories/) · [Plan general de ingeniería](../../../infra-uni/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md)
+- Alcance, roles y reglas de negocio. [Historias de usuario](https://github.com/taller-web-sigesu/infra-uni/tree/main/docs/requirements/user-stories) · [Plan general de ingeniería](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/superpowers/plans/2026-11-04-ingenieria-pendiente.md)
 - Contratos, responsabilidades y ejemplos. [Diseño REST](../API-DISENIO.md) · [Diseño backend](../BACKEND-DISENIO.md) · [Arquitectura backend](../../ARCHITECTURE.md) · [Diseño de Postman](../postman-disenio/postman-api-design.md)
-- Persistencia y decisiones de equipo. [Diseño de datos](../../../infra-uni/DISENIO-BD.md) · [ADR](../../../infra-uni/docs/adr/)
+- Persistencia y decisiones de equipo. [Diseño de datos](https://github.com/taller-web-sigesu/infra-uni/blob/main/DISENIO-BD.md) · [ADR](https://github.com/taller-web-sigesu/infra-uni/tree/main/docs/adr)
 
 Usar las HU para alcance y permisos, el diseño REST para interfaces, el diseño backend para separación de módulos y el diseño de datos para DDL y consultas. Registrar las discrepancias en la revisión de contrato y vincular la decisión a la HU afectada. Los ADR marcados como «Propuesto» requieren revisión para los puntos que afectan esta entrega.
 
