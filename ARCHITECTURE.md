@@ -100,7 +100,7 @@ El [diseño de base de datos](../infra-uni/DISENIO-BD.md) existe como documento 
 ## Seguridad objetivo
 
 - **Autenticación:** Spring Security con **JWT de acceso de corta duración** como opción de diseño inicial. Mantenerlo en memoria del cliente para el MVP, sin persistirlo en `localStorage`; si se agrega renovación con cookies, revisar CSRF, `HttpOnly`, `Secure`, SameSite y CORS. Una sesión segura gestionada en servidor es alternativa permitida por el PDF.
-- **Autorización:** RBAC (`estudiante`, `tecnico`, `supervisor`, `administrador`) **más** control por recurso: propietario, asignación y atribuciones de supervisión. Denegar por defecto.
+- **Autorización:** RBAC (`estudiante`, `docente`, `tecnico`, `supervisor`, `administrador`) **más** control por recurso: propietario, asignación y atribuciones de supervisión. Denegar por defecto.
 - **Credenciales:** hash de contraseñas con Argon2id o BCrypt correctamente configurado; no guardar texto plano ni secretos en Git.
 - **Tránsito:** HTTPS/TLS entre navegador, API y conexiones gestionadas; credenciales externas por variables de entorno.
 - **Entradas y salidas:** validación de DTO, paginación, límites de tamaño, manejo centralizado de excepciones, prevención de inyección y exposición mínima de datos.

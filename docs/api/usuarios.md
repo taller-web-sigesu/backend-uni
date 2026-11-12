@@ -184,6 +184,10 @@ Content-Type: application/json
     "nombre": "Estudiante"
   },
   {
+    "codigo": "DOCENTE",
+    "nombre": "Docente"
+  },
+  {
     "codigo": "TECNICO",
     "nombre": "Técnico"
   },

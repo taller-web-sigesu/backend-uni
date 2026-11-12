@@ -6962,7 +6962,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"codigo\": \"ESTUDIANTE\",\n    \"nombre\": \"Estudiante\"\n  },\n  {\n    \"codigo\": \"TECNICO\",\n    \"nombre\": \"Técnico\"\n  },\n  {\n    \"codigo\": \"SUPERVISOR\",\n    \"nombre\": \"Supervisor\"\n  },\n  {\n    \"codigo\": \"ADMINISTRADOR\",\n    \"nombre\": \"Administrador\"\n  }\n]"
+              "body": "[\n  {\n    \"codigo\": \"ESTUDIANTE\",\n    \"nombre\": \"Estudiante\"\n  },\n  {\n    \"codigo\": \"DOCENTE\",\n    \"nombre\": \"Docente\"\n  },\n  {\n    \"codigo\": \"TECNICO\",\n    \"nombre\": \"Técnico\"\n  },\n  {\n    \"codigo\": \"SUPERVISOR\",\n    \"nombre\": \"Supervisor\"\n  },\n  {\n    \"codigo\": \"ADMINISTRADOR\",\n    \"nombre\": \"Administrador\"\n  }\n]"
             }
           ],
           "event": [
