@@ -8,7 +8,7 @@
 
 Registra una solicitud de servicio.
 
-- **Seguridad.** JWT de estudiante.
+- **Seguridad.** JWT de estudiante o docente.
 - **Entrada.** JSON con `categoriaId`, `ubicacion` y `descripcion`, todos obligatorios. La categoría, su área y la prioridad predeterminada deben estar activas.
 - **Salida.** Solicitud en `NUEVO`, código generado, área, prioridad y fecha de registro.
 - **Errores.** `400` por campos vacíos o categoría no habilitada y `403` por rol no autorizado.
@@ -49,7 +49,7 @@ Location: /api/v1/requests/31
 
 Lista solicitudes visibles según el rol autenticado.
 
-- **Seguridad.** JWT de estudiante, técnico o supervisor. El servidor determina el alcance por propietario, asignación o área.
+- **Seguridad.** JWT de estudiante, docente, técnico o supervisor. El servidor determina el alcance por propietario, asignación o área.
 - **Entrada.** `page` y `size` opcionales. Para el supervisor, `estado`, `categoriaId` y `prioridadId` opcionales. Sin cuerpo.
 - **Salida.** Página de resúmenes con código, categoría, prioridad, estado y fecha.
 - **Errores.** `400` por filtros o paginación inválidos y `403` para roles fuera del flujo.
@@ -98,13 +98,13 @@ GET /api/v1/requests?estado=NUEVO&categoriaId=3&prioridadId=4&page=0&size=20
 Authorization: Bearer <jwt-supervisor>
 ```
 
-El estudiante recibe registros propios. El técnico recibe asignaciones vigentes, ordenadas por prioridad descendente y fecha ascendente. El supervisor recibe solicitudes de su área y puede usar los filtros mostrados. Las tres variantes devuelven la misma estructura paginada.
+El estudiante o docente recibe registros propios. El técnico recibe asignaciones vigentes, ordenadas por prioridad descendente y fecha ascendente. El supervisor recibe solicitudes de su área y puede usar los filtros mostrados. Las tres variantes devuelven la misma estructura paginada.
 
 ## `GET /requests/{id}`
 
 Consulta el detalle y el SLA de una solicitud.
 
-- **Seguridad.** JWT. Estudiante propietario, técnico con asignación vigente o supervisor del área.
+- **Seguridad.** JWT. Solicitante propietario (estudiante o docente), técnico con asignación vigente o supervisor del área.
 - **Entrada.** `id` obligatorio en la ruta. Sin cuerpo.
 - **Salida.** Datos del solicitante, ubicación, descripción, área, prioridad, estado, responsable actual y, en solicitudes terminales, último responsable si existió.
 - **Errores.** `404` si no existe o queda fuera del alcance del actor.
@@ -150,7 +150,7 @@ Content-Type: application/json
 
 Consulta las transiciones de la solicitud.
 
-- **Seguridad.** JWT. Estudiante propietario, técnico con asignación vigente o supervisor del área.
+- **Seguridad.** JWT. Solicitante propietario (estudiante o docente), técnico con asignación vigente o supervisor del área.
 - **Entrada.** `id` obligatorio. `page` y `size` opcionales.
 - **Salida.** Página en orden cronológico con estado previo y nuevo, actor, fecha y motivo cuando aplique.
 - **Errores.** `404` si la solicitud está fuera de alcance y `400` por paginación inválida.
@@ -188,7 +188,7 @@ Content-Type: application/json
 
 Consulta los comentarios de seguimiento.
 
-- **Seguridad.** JWT. Estudiante propietario, técnico con asignación vigente o supervisor del área.
+- **Seguridad.** JWT. Solicitante propietario (estudiante o docente), técnico con asignación vigente o supervisor del área.
 - **Entrada.** `id` obligatorio. `page` y `size` opcionales.
 - **Salida.** Página de comentarios con autor y fecha.
 - **Errores.** `404` si la solicitud está fuera de alcance y `400` por paginación inválida.
@@ -228,7 +228,7 @@ Content-Type: application/json
 
 Agrega un comentario de seguimiento.
 
-- **Seguridad.** JWT. Estudiante propietario, técnico con asignación vigente o supervisor del área.
+- **Seguridad.** JWT. Solicitante propietario (estudiante o docente), técnico con asignación vigente o supervisor del área.
 - **Entrada.** `id` obligatorio. JSON con `contenido` no vacío.
 - **Salida.** Comentario creado con su autor y fecha de servidor.
 - **Errores.** `400` por contenido vacío y `404` si la solicitud está fuera de alcance.

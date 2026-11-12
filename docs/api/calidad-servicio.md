@@ -171,7 +171,7 @@ Content-Type: application/json
 
 Registra la satisfacción del solicitante.
 
-- **Seguridad.** JWT del estudiante propietario.
+- **Seguridad.** JWT del solicitante propietario (estudiante o docente).
 - **Entrada.** `id` obligatorio. JSON con `calificacion` entera de 1 a 5 y `comentario` opcional.
 - **Salida.** Encuesta registrada para una solicitud `CERRADO`.
 - **Errores.** `400` por calificación inválida, `404` si la solicitud está fuera de alcance y `409` si la solicitud aún no está cerrada o ya existe una respuesta.
