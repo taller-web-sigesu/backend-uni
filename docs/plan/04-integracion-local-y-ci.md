@@ -2,7 +2,7 @@
 
 **Objetivo.** Dejar el backend reproducible desde Docker local y comprobar en GitHub Actions el contrato, la compilación, las migraciones, las pruebas y el arranque de la imagen.
 
-**Entrada.** Contratos y fases funcionales cerrados. Consultar la [guía Docker](../../../infra-uni/docs/DOCKER.md), el [ADR de CI](../../../infra-uni/docs/adr/ADR-0005-ci-cd-calidad.md) y el [ADR de observabilidad](../../../infra-uni/docs/adr/ADR-0003-observabilidad-retencion.md) para las decisiones aplicables a local y CI.
+**Entrada.** Contratos y fases funcionales cerrados. Consultar la [guía Docker](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/DOCKER.md), el [ADR de CI](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0005-ci-cd-calidad.md) y el [ADR de observabilidad](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0003-observabilidad-retencion.md) para las decisiones aplicables a local y CI.
 
 ## Tareas
 

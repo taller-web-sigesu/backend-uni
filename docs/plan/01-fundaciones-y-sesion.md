@@ -2,7 +2,7 @@
 
 **Objetivo.** Arrancar el backend sobre MySQL desde una base vacía y habilitar sesiones y autorización por rol para HU-01 y HU-02.
 
-**Entrada.** Contratos y esquema revisados en la [fase 00](00-contratos-y-decisiones.md). Consultar el [contrato de autenticación](../api/autenticacion.md), el [contrato operativo](../api/operacion.md) y el [ADR de sesión](../../../infra-uni/docs/adr/ADR-0002-autenticacion-sesion.md).
+**Entrada.** Contratos y esquema revisados en la [fase 00](00-contratos-y-decisiones.md). Consultar el [contrato de autenticación](../api/autenticacion.md), el [contrato operativo](../api/operacion.md) y el [ADR de sesión](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0002-autenticacion-sesion.md).
 
 ## Tareas
 
