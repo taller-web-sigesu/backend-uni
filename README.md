@@ -3,6 +3,7 @@
 API REST en Java 21 + Spring Boot 4.1.2 sobre MySQL 8.4. Implementa HU-01 a HU-29: sesión, auto-registro con aprobación, restablecimiento de contraseña, solicitudes con evidencias, atención, SLA, auditoría, encuesta, dashboard, usuarios, catálogos y reservas de ambientes.
 
 - Contrato: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) (generado por la aplicación en `/v3/api-docs`; Swagger UI en `/swagger-ui.html`).
+- Integración con el frontend (sesión, errores, cuentas de demostración): [`docs/INTEGRACION-FRONTEND.md`](docs/INTEGRACION-FRONTEND.md).
 - Seguridad y permisos: [`docs/SECURITY.md`](docs/SECURITY.md). Base de datos: [`docs/DATABASE.md`](docs/DATABASE.md).
 - Diseño: [API por negocio](docs/API-DISENIO.md), [diseño del backend](docs/BACKEND-DISENIO.md) y [planes por fase](docs/plan/).
 
@@ -25,7 +26,7 @@ API REST en Java 21 + Spring Boot 4.1.2 sobre MySQL 8.4. Implementa HU-01 a HU-2
 ## Arranque local con Docker
 
 1. Inicia el entorno desde `infra-uni` (`iniciar.bat` o `docker compose up -d --build`). Flyway migra la base vacía al arrancar.
-2. Para el recorrido de demostración, define `APP_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/demo` en el servicio `backend` del Compose. Cuentas (contraseña `Demo2026!`): `admin.demo`, `supervisor.ti.demo`, `tecnico.ti.demo`, `ana.demo` (estudiante) y `pedro.demo` (docente), todas `@universidad.example`.
+2. El Compose local ya define `APP_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/demo` y carga cuentas ficticias (contraseña `Demo2026!`): `admin.demo`, `supervisor.ti.demo`, `tecnico.ti.demo`, `ana.demo` (estudiante) y `pedro.demo` (docente), todas `@universidad.example`. La lista completa está en la [guía de integración](docs/INTEGRACION-FRONTEND.md#cuentas-de-demostración).
 3. Sin datos ficticios, aprovisiona el primer administrador con `APP_BOOTSTRAP_ADMIN_EMAIL` y `APP_BOOTSTRAP_ADMIN_PASSWORD`; deberá cambiar la contraseña en su primer ingreso.
 4. Para recompilar cambios Java usa `mvn compile` en **Exec** del contenedor `backend`.
 

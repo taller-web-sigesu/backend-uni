@@ -1,6 +1,6 @@
 # Registro y seguimiento de solicitudes
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-03 a HU-06, evidencias de HU-26 y bandejas de HU-07 y HU-09.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-03 a HU-06, evidencias de HU-26 y bandejas de HU-07 y HU-09.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md)
 

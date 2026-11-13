@@ -1,10 +1,10 @@
 # Acceso y sesión
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-01, HU-02 y HU-27.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-01, HU-02 y HU-27.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md) · [ADR de sesión](https://github.com/taller-web-sigesu/infra-uni/blob/269a0bcf7f90a68fdb16a80b177337dc6527b6fd/docs/adr/ADR-0002-autenticacion-sesion.md)
 
-La sesión de primer ingreso permite cambiar la contraseña, renovarse o cerrarse. En operaciones de negocio devuelve `403 CAMBIO_CONTRASENA_REQUERIDO`. El JWT se mantiene en memoria y dura 15 minutos. El refresh tiene siete días de vigencia absoluta. Se propone `SameSite=Lax` bajo el mismo sitio y `Secure` en HTTPS. Los nombres de la cookie y del objeto de respuesta son propuestas. El mecanismo concreto de CSRF por entorno se formalizará en la revisión de seguridad.
+La sesión de primer ingreso permite cambiar la contraseña, renovarse o cerrarse. En operaciones de negocio devuelve `403 CAMBIO_CONTRASENA_REQUERIDO`. El JWT se mantiene en memoria y dura 15 minutos. El refresh tiene siete días de vigencia absoluta y viaja en la cookie `refresh_token` (`HttpOnly`, `SameSite=Lax`, `Path=/api/v1/auth` y `Secure` salvo `APP_COOKIE_SECURE=false`). La protección CSRF de las operaciones con cookie combina `SameSite=Lax` con la validación del encabezado `Origin` contra `APP_ALLOWED_ORIGINS` ([SECURITY.md](../SECURITY.md)). La guía para el frontend está en [INTEGRACION-FRONTEND.md](../INTEGRACION-FRONTEND.md).
 
 ## `POST /auth/register`
 
