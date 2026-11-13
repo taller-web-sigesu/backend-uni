@@ -129,7 +129,7 @@ Cambia el estado según la transición autorizada.
 - **Seguridad.** JWT de técnico asignado para iniciar o resolver, o de supervisor del área para cerrar o rechazar.
 - **Entrada.** `id` obligatorio. JSON con `estado` obligatorio y `motivo` obligatorio al rechazar.
 - **Salida.** Estado actualizado de la solicitud.
-- **Errores.** `400` si falta el motivo requerido, `403` por rol sin permiso, `404` por alcance y `409` por transición inválida o concurrente.
+- **Errores.** `400` si falta el motivo requerido, `400 USAR_ASIGNACION` si se pide `ASIGNADO` (la asignación solo se hace con `POST /requests/{id}/assignments`), `403` por rol sin permiso, `404` por alcance y `409` por transición inválida o concurrente.
 
 **Petición de ejemplo**
 

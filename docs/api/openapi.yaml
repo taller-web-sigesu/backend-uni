@@ -1,0 +1,3393 @@
+openapi: 3.1.0
+info:
+  title: API de Servicios Universitarios (Gestal)
+  description: |-
+    Contrato REST de HU-01 a HU-25. Identificadores como cadenas decimales, instantes en UTC,
+    fechas y horas de reserva en America/Lima, paginación desde 0 (20 por defecto, 100 como máximo)
+    y errores application/problem+json con codigo y correlationId.
+  version: v1
+servers:
+- url: /
+  description: Origen actual
+security:
+- bearerAuth: []
+tags:
+- name: Reserva de ambientes
+  description: HU-21 a HU-25
+- name: "SLA, auditoría y satisfacción"
+  description: HU-18 a HU-20
+- name: Catálogos
+  description: HU-03
+- name: Acceso y sesión
+  description: HU-01 y HU-02
+- name: Evidencias
+  description: HU-26
+- name: Administración de catálogos
+  description: HU-16 y HU-17
+- name: Dashboard y reportes
+  description: HU-12 a HU-14
+- name: Solicitudes
+  description: "HU-03 a HU-06, HU-19 y HU-20"
+- name: Administración de ambientes
+  description: HU-25
+- name: Usuarios y roles
+  description: "HU-15, HU-28 y HU-29"
+- name: "Asignación, prioridad y ciclo de vida"
+  description: HU-07 a HU-11
+paths:
+  /api/v1/admin/spaces/{id}/schedule:
+    get:
+      tags:
+      - Administración de ambientes
+      summary: Consulta el horario semanal del ambiente
+      operationId: schedule
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceScheduleResponse"
+    put:
+      tags:
+      - Administración de ambientes
+      summary: Sustituye el horario semanal completo
+      operationId: replaceSchedule
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceSpaceScheduleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceScheduleResponse"
+  /api/v1/admin/reservation-policy:
+    get:
+      tags:
+      - Administración de ambientes
+      summary: Consulta la política vigente de reservas
+      operationId: policy
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationPolicyResponse"
+    put:
+      tags:
+      - Administración de ambientes
+      summary: Sustituye la política vigente para nuevas reservas
+      operationId: replacePolicy
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationPolicyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationPolicyResponse"
+  /api/v1/reservations:
+    get:
+      tags:
+      - Reserva de ambientes
+      summary: Lista reservas propias o la bandeja de aprobación (vista=gestion)
+      operationId: list
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: vista
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: estado
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: fechaDesde
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: fechaHasta
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseReservationSummaryResponse"
+    post:
+      tags:
+      - Reserva de ambientes
+      summary: Registra una reserva pendiente de aprobación
+      operationId: create
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReservationRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationSummaryResponse"
+  /api/v1/requests:
+    get:
+      tags:
+      - Solicitudes
+      summary: Lista solicitudes visibles según el rol
+      operationId: list_1
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: estado
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: categoriaId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: prioridadId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseRequestSummaryResponse"
+    post:
+      tags:
+      - Solicitudes
+      summary: Registra una solicitud de servicio
+      operationId: create_1
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequestRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RequestSummaryResponse"
+  /api/v1/requests/{id}/survey:
+    post:
+      tags:
+      - Solicitudes
+      summary: Registra la satisfacción del solicitante
+      operationId: survey
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSurveyRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SurveyResponse"
+  /api/v1/requests/{id}/comments:
+    get:
+      tags:
+      - Solicitudes
+      summary: Consulta los comentarios de seguimiento
+      operationId: listComments
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseCommentResponse"
+    post:
+      tags:
+      - Solicitudes
+      summary: Agrega un comentario de seguimiento
+      operationId: addComment
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CommentResponse"
+  /api/v1/requests/{id}/attachments:
+    get:
+      tags:
+      - Evidencias
+      summary: Lista las evidencias vigentes de la solicitud
+      operationId: list_2
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttachmentResponse"
+    post:
+      tags:
+      - Evidencias
+      summary: "Adjunta una evidencia JPG, PNG o PDF de hasta 5 MB (máximo 5 vigentes)"
+      operationId: upload
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AuthenticatedActor"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AttachmentResponse"
+  /api/v1/requests/{id}/assignments:
+    post:
+      tags:
+      - "Asignación, prioridad y ciclo de vida"
+      summary: Asigna o reasigna la solicitud
+      operationId: assign
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignTechnicianRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AssignmentResponse"
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Acceso y sesión
+      summary: Registra una cuenta de estudiante pendiente de aprobación (HU-27)
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Acceso y sesión
+      summary: Rota el refresh y emite un JWT nuevo
+      operationId: refresh
+      parameters:
+      - name: refresh_token
+        in: cookie
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - Acceso y sesión
+      summary: Revoca la sesión actual
+      operationId: logout
+      parameters:
+      - name: refresh_token
+        in: cookie
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Acceso y sesión
+      summary: Inicia sesión con la cuenta institucional
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+  /api/v1/admin/users:
+    get:
+      tags:
+      - Usuarios y roles
+      summary: Lista cuentas
+      operationId: list_3
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseUserResponse"
+    post:
+      tags:
+      - Usuarios y roles
+      summary: Crea una cuenta institucional con cambio de contraseña obligatorio
+      operationId: create_2
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+  /api/v1/admin/users/{id}/password-reset:
+    post:
+      tags:
+      - Usuarios y roles
+      summary: "Genera una contraseña temporal, revoca las sesiones y exige cambiarla\
+        \ (HU-29)"
+      operationId: resetPassword
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PasswordResetResponse"
+  /api/v1/admin/spaces:
+    get:
+      tags:
+      - Administración de ambientes
+      summary: Lista espacios activos e inactivos
+      operationId: listSpaces
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseSpaceResponse"
+    post:
+      tags:
+      - Administración de ambientes
+      summary: Crea un ambiente
+      operationId: createSpace
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSpaceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceResponse"
+  /api/v1/admin/space-types:
+    get:
+      tags:
+      - Administración de ambientes
+      summary: Lista tipos de ambiente
+      operationId: listTypes
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseSpaceTypeResponse"
+    post:
+      tags:
+      - Administración de ambientes
+      summary: Crea un tipo de ambiente
+      operationId: createType
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSpaceTypeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceTypeResponse"
+  /api/v1/admin/sla-policies:
+    get:
+      tags:
+      - "SLA, auditoría y satisfacción"
+      summary: Consulta las políticas de SLA
+      operationId: list_4
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseSlaPolicyResponse"
+    post:
+      tags:
+      - "SLA, auditoría y satisfacción"
+      summary: Define una política para solicitudes nuevas
+      operationId: create_3
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSlaPolicyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SlaPolicyResponse"
+  /api/v1/admin/catalogs/priorities:
+    get:
+      tags:
+      - Administración de catálogos
+      summary: Lista prioridades activas e inactivas
+      operationId: list_5
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponsePriorityResponse"
+    post:
+      tags:
+      - Administración de catálogos
+      summary: Crea una prioridad
+      operationId: create_4
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePriorityRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PriorityResponse"
+  /api/v1/admin/catalogs/categories:
+    get:
+      tags:
+      - Administración de catálogos
+      summary: Lista categorías activas e inactivas
+      operationId: list_6
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseCategoryResponse"
+    post:
+      tags:
+      - Administración de catálogos
+      summary: Crea una categoría
+      operationId: create_5
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+  /api/v1/admin/catalogs/areas:
+    get:
+      tags:
+      - Administración de catálogos
+      summary: Lista áreas activas e inactivas
+      operationId: list_7
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAreaResponse"
+    post:
+      tags:
+      - Administración de catálogos
+      summary: Crea un área
+      operationId: create_6
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAreaRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AreaResponse"
+  /api/v1/reservations/{id}/status:
+    patch:
+      tags:
+      - Reserva de ambientes
+      summary: "Confirma, rechaza o cancela una reserva"
+      operationId: changeStatus
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeReservationStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationDetailResponse"
+  /api/v1/requests/{id}:
+    get:
+      tags:
+      - Solicitudes
+      summary: Consulta el detalle y el SLA de una solicitud
+      operationId: detail
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RequestDetailResponse"
+    patch:
+      tags:
+      - "Asignación, prioridad y ciclo de vida"
+      summary: Actualiza la prioridad de una solicitud abierta
+      operationId: changePriority
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePriorityRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RequestSummaryResponse"
+  /api/v1/requests/{id}/status:
+    patch:
+      tags:
+      - "Asignación, prioridad y ciclo de vida"
+      summary: Cambia el estado según la transición autorizada
+      operationId: changeStatus_1
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeRequestStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RequestSummaryResponse"
+  /api/v1/auth/password:
+    patch:
+      tags:
+      - Acceso y sesión
+      summary: Cambia la contraseña propia y reemplaza la sesión
+      operationId: changePassword
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+  /api/v1/admin/users/{id}:
+    get:
+      tags:
+      - Usuarios y roles
+      summary: Consulta una cuenta
+      operationId: detail_1
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+    patch:
+      tags:
+      - Usuarios y roles
+      summary: "Edita datos, rol o área, o desactiva una cuenta"
+      operationId: update
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+  /api/v1/admin/users/{id}/account-status:
+    patch:
+      tags:
+      - Usuarios y roles
+      summary: Aprueba o rechaza (con motivo) una cuenta auto-registrada (HU-28)
+      operationId: decide
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountDecisionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+  /api/v1/admin/spaces/{id}:
+    patch:
+      tags:
+      - Administración de ambientes
+      summary: Edita o desactiva un ambiente
+      operationId: updateSpace
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceResponse"
+  /api/v1/admin/space-types/{id}:
+    patch:
+      tags:
+      - Administración de ambientes
+      summary: Edita o desactiva un tipo de ambiente
+      operationId: updateType
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceTypeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceTypeResponse"
+  /api/v1/admin/sla-policies/{id}:
+    patch:
+      tags:
+      - "SLA, auditoría y satisfacción"
+      summary: Ajusta o desactiva una política para solicitudes nuevas
+      operationId: update_1
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSlaPolicyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SlaPolicyResponse"
+  /api/v1/admin/catalogs/request-statuses/{id}:
+    patch:
+      tags:
+      - Administración de catálogos
+      summary: Personaliza el nombre visible de un estado
+      operationId: rename
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameRequestStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RequestStatusResponse"
+  /api/v1/admin/catalogs/priorities/{id}:
+    patch:
+      tags:
+      - Administración de catálogos
+      summary: Edita o desactiva una prioridad
+      operationId: update_2
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePriorityRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PriorityResponse"
+  /api/v1/admin/catalogs/categories/{id}:
+    patch:
+      tags:
+      - Administración de catálogos
+      summary: Edita o desactiva una categoría
+      operationId: update_3
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+  /api/v1/admin/catalogs/areas/{id}:
+    patch:
+      tags:
+      - Administración de catálogos
+      summary: Edita o desactiva un área
+      operationId: update_4
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAreaRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AreaResponse"
+  /api/v1/status:
+    get:
+      tags:
+      - status-controller
+      operationId: status
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/spaces:
+    get:
+      tags:
+      - Reserva de ambientes
+      summary: Lista espacios activos y su horario para el día elegido
+      operationId: list_8
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: tipoEspacioId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: pabellon
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: capacidadMinima
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: fecha
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseSpaceSummaryResponse"
+  /api/v1/spaces/{id}/availability:
+    get:
+      tags:
+      - Reserva de ambientes
+      summary: Consulta franjas libres y ocupadas de un ambiente activo
+      operationId: availability
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: fecha
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpaceAvailabilityResponse"
+  /api/v1/reservations/{id}:
+    get:
+      tags:
+      - Reserva de ambientes
+      summary: Consulta una reserva y su estado operativo
+      operationId: detail_2
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationDetailResponse"
+  /api/v1/reservations/{id}/history:
+    get:
+      tags:
+      - Reserva de ambientes
+      summary: Consulta las transiciones de una reserva
+      operationId: history
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseReservationHistoryResponse"
+  /api/v1/requests/{id}/history:
+    get:
+      tags:
+      - Solicitudes
+      summary: Consulta las transiciones de la solicitud
+      operationId: history_1
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseRequestHistoryResponse"
+  /api/v1/requests/{id}/eligible-technicians:
+    get:
+      tags:
+      - "Asignación, prioridad y ciclo de vida"
+      summary: Lista técnicos activos del área de la solicitud
+      operationId: eligibleTechnicians
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseEligibleTechnicianResponse"
+  /api/v1/requests/{id}/audit-events:
+    get:
+      tags:
+      - Solicitudes
+      summary: Consulta las modificaciones auditadas
+      operationId: auditEvents
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseRequestAuditEventResponse"
+  /api/v1/requests/{id}/attachments/{attachmentId}/content:
+    get:
+      tags:
+      - Evidencias
+      summary: Descarga una evidencia (o redirige a una URL firmada de 5 minutos)
+      operationId: download
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+  /api/v1/dashboard/summary:
+    get:
+      tags:
+      - Dashboard y reportes
+      summary: "Resume la atención de solicitudes para el periodo [fechaDesde, fechaHasta)"
+      operationId: summary
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: fechaDesde
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: fechaHasta
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: areaId
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryResponse"
+  /api/v1/dashboard/reports:
+    get:
+      tags:
+      - Dashboard y reportes
+      summary: Exporta solicitudes o indicadores en CSV
+      operationId: report
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: tipo
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: fechaDesde
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: fechaHasta
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: areaId
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: byte
+  /api/v1/catalogs/categories:
+    get:
+      tags:
+      - Catálogos
+      summary: Lista categorías habilitadas para registrar solicitudes
+      operationId: listAvailable
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAvailableCategoryResponse"
+  /api/v1/admin/users/pending:
+    get:
+      tags:
+      - Usuarios y roles
+      summary: "Lista las cuentas auto-registradas pendientes de aprobación, de la\
+        \ más antigua a la más reciente (HU-28)"
+      operationId: pending
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponsePendingAccountResponse"
+  /api/v1/admin/roles:
+    get:
+      tags:
+      - Usuarios y roles
+      summary: Consulta los roles disponibles
+      operationId: roles
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoleResponse"
+  /api/v1/admin/catalogs/request-statuses:
+    get:
+      tags:
+      - Administración de catálogos
+      summary: Consulta los estados del flujo de solicitudes
+      operationId: list_9
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RequestStatusResponse"
+  /api/v1/requests/{id}/attachments/{attachmentId}:
+    delete:
+      tags:
+      - Evidencias
+      summary: Elimina una evidencia propia mientras la solicitud está abierta
+      operationId: delete
+      parameters:
+      - name: actor
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/AuthenticatedActor"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    AuthenticatedActor:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        sessionId:
+          type: integer
+          format: int64
+        role:
+          type: string
+          enum:
+          - ESTUDIANTE
+          - DOCENTE
+          - TECNICO
+          - SUPERVISOR
+          - ADMINISTRADOR
+        areaId:
+          type: integer
+          format: int64
+        nombreCompleto:
+          type: string
+        mustChangePassword:
+          type: boolean
+    ReplaceSpaceScheduleRequest:
+      type: object
+      properties:
+        franjas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleSlotRequest"
+      required:
+      - franjas
+    ScheduleSlotRequest:
+      type: object
+      properties:
+        diaSemana:
+          type: integer
+          format: int32
+          maximum: 7
+          minimum: 1
+        horaApertura:
+          type: string
+          format: time-local
+        horaCierre:
+          type: string
+          format: time-local
+      required:
+      - diaSemana
+      - horaApertura
+      - horaCierre
+    ScheduleSlotResponse:
+      type: object
+      properties:
+        diaSemana:
+          type: integer
+          format: int32
+        horaApertura:
+          type: string
+        horaCierre:
+          type: string
+    SpaceScheduleResponse:
+      type: object
+      properties:
+        franjas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleSlotResponse"
+    ReservationPolicyRequest:
+      type: object
+      properties:
+        duracionMinimaMinutos:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 1
+        duracionMaximaMinutos:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 1
+        horasAnticipacionMinima:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        diasAnticipacionMaxima:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        maxReservasActivasPorDia:
+          type: integer
+          format: int32
+          maximum: 255
+          minimum: 1
+      required:
+      - diasAnticipacionMaxima
+      - duracionMaximaMinutos
+      - duracionMinimaMinutos
+      - horasAnticipacionMinima
+      - maxReservasActivasPorDia
+    ReservationPolicyResponse:
+      type: object
+      properties:
+        duracionMinimaMinutos:
+          type: integer
+          format: int32
+        duracionMaximaMinutos:
+          type: integer
+          format: int32
+        horasAnticipacionMinima:
+          type: integer
+          format: int32
+        diasAnticipacionMaxima:
+          type: integer
+          format: int32
+        maxReservasActivasPorDia:
+          type: integer
+          format: int32
+    CreateReservationRequest:
+      type: object
+      properties:
+        espacioId:
+          type: string
+          minLength: 1
+        fecha:
+          type: string
+          format: date
+        horaInicio:
+          type: string
+          format: time-local
+        horaFin:
+          type: string
+          format: time-local
+        motivo:
+          type: string
+          maxLength: 255
+          minLength: 0
+        numAsistentes:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+          maximum: 65535
+      required:
+      - espacioId
+      - fecha
+      - horaFin
+      - horaInicio
+      - motivo
+    ReservationSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        espacioId:
+          type: string
+        espacio:
+          type: string
+        fecha:
+          type: string
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+        estado:
+          type: string
+        estadoOperativo:
+          type: string
+    CreateRequestRequest:
+      type: object
+      properties:
+        categoriaId:
+          type: string
+          minLength: 1
+        ubicacion:
+          type: string
+          maxLength: 255
+          minLength: 0
+        descripcion:
+          type: string
+          maxLength: 5000
+          minLength: 0
+      required:
+      - categoriaId
+      - descripcion
+      - ubicacion
+    PersonResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombreCompleto:
+          type: string
+    RequestSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        categoriaId:
+          type: string
+        areaId:
+          type: string
+        prioridadId:
+          type: string
+        estado:
+          type: string
+        creadoEn:
+          type: string
+        responsableActual:
+          $ref: "#/components/schemas/PersonResponse"
+    SubmitSurveyRequest:
+      type: object
+      properties:
+        calificacion:
+          type: integer
+          format: int32
+          maximum: 5
+          minimum: 1
+        comentario:
+          type: string
+          maxLength: 2000
+          minLength: 0
+      required:
+      - calificacion
+    SurveyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        solicitudId:
+          type: string
+        calificacion:
+          type: integer
+          format: int32
+        comentario:
+          type: string
+    CreateCommentRequest:
+      type: object
+      properties:
+        contenido:
+          type: string
+          maxLength: 5000
+          minLength: 0
+      required:
+      - contenido
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        contenido:
+          type: string
+        autor:
+          $ref: "#/components/schemas/PersonResponse"
+        creadoEn:
+          type: string
+    AttachmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        tamanoBytes:
+          type: integer
+          format: int64
+        tipoMime:
+          type: string
+        autorId:
+          type: string
+        autorNombre:
+          type: string
+        creadoEn:
+          type: string
+        puedeEliminar:
+          type: boolean
+    AssignTechnicianRequest:
+      type: object
+      properties:
+        tecnicoId:
+          type: string
+          minLength: 1
+        prioridadId:
+          type: string
+      required:
+      - tecnicoId
+    AssignmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        solicitudId:
+          type: string
+        tecnicoId:
+          type: string
+        asignadaEn:
+          type: string
+        estadoSolicitud:
+          type: string
+        prioridadId:
+          type: string
+    RegisterRequest:
+      type: object
+      properties:
+        nombreCompleto:
+          type: string
+          maxLength: 150
+          minLength: 0
+        correo:
+          type: string
+          maxLength: 160
+          minLength: 0
+        contrasena:
+          type: string
+          minLength: 1
+        confirmacionContrasena:
+          type: string
+          minLength: 1
+      required:
+      - confirmacionContrasena
+      - contrasena
+      - correo
+      - nombreCompleto
+    RegisterResponse:
+      type: object
+      properties:
+        mensaje:
+          type: string
+    SessionResponse:
+      type: object
+      properties:
+        tokenAcceso:
+          type: string
+        expiraEnSegundos:
+          type: integer
+          format: int64
+        usuario:
+          $ref: "#/components/schemas/SessionUserResponse"
+        debeCambiarContrasena:
+          type: boolean
+    SessionUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombreCompleto:
+          type: string
+        rol:
+          type: string
+        areaId:
+          type: string
+    LoginRequest:
+      type: object
+      properties:
+        correo:
+          type: string
+          maxLength: 150
+          minLength: 0
+        contrasena:
+          type: string
+          maxLength: 200
+          minLength: 0
+      required:
+      - contrasena
+      - correo
+    CreateUserRequest:
+      type: object
+      properties:
+        nombreCompleto:
+          type: string
+          maxLength: 150
+          minLength: 0
+        correo:
+          type: string
+          format: email
+          maxLength: 150
+          minLength: 0
+        contrasenaInicial:
+          type: string
+          minLength: 1
+        rol:
+          type: string
+          minLength: 1
+        areaId:
+          type: string
+        telefono:
+          type: string
+          maxLength: 20
+          minLength: 0
+      required:
+      - contrasenaInicial
+      - correo
+      - nombreCompleto
+      - rol
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombreCompleto:
+          type: string
+        correo:
+          type: string
+        telefono:
+          type: string
+        rol:
+          type: string
+        areaId:
+          type: string
+        activo:
+          type: boolean
+        estadoCuenta:
+          type: string
+        origenRegistro:
+          type: string
+        creadoEn:
+          type: string
+    PasswordResetResponse:
+      type: object
+      properties:
+        contrasenaTemporal:
+          type: string
+    CreateSpaceRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          maxLength: 40
+          minLength: 0
+          pattern: "[A-Z0-9_\\-]+"
+        nombre:
+          type: string
+          maxLength: 120
+          minLength: 0
+        tipoEspacioId:
+          type: string
+          minLength: 1
+        capacidad:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 1
+        areaId:
+          type: string
+        pabellon:
+          type: string
+          maxLength: 60
+          minLength: 0
+        piso:
+          type: string
+          maxLength: 20
+          minLength: 0
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+        ubicacionDetallada:
+          type: string
+          maxLength: 255
+          minLength: 0
+        requiereAprobacion:
+          type: boolean
+      required:
+      - capacidad
+      - codigo
+      - nombre
+      - tipoEspacioId
+    SpaceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        tipoEspacioId:
+          type: string
+        areaId:
+          type: string
+        pabellon:
+          type: string
+        piso:
+          type: string
+        descripcion:
+          type: string
+        ubicacionDetallada:
+          type: string
+        capacidad:
+          type: integer
+          format: int32
+        requiereAprobacion:
+          type: boolean
+        activo:
+          type: boolean
+    CreateSpaceTypeRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          maxLength: 40
+          minLength: 0
+          pattern: "[A-Z0-9_\\-]+"
+        nombre:
+          type: string
+          maxLength: 80
+          minLength: 0
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+      required:
+      - codigo
+      - nombre
+    SpaceTypeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        activo:
+          type: boolean
+    CreateSlaPolicyRequest:
+      type: object
+      properties:
+        categoriaId:
+          type: string
+        prioridadId:
+          type: string
+        horasObjetivo:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 1
+        horasAviso:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        vigenteDesde:
+          type: string
+          format: date-time
+        vigenteHasta:
+          type: string
+          format: date-time
+      required:
+      - horasAviso
+      - horasObjetivo
+    SlaPolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        categoriaId:
+          type: string
+        prioridadId:
+          type: string
+        horasObjetivo:
+          type: integer
+          format: int32
+        horasAviso:
+          type: integer
+          format: int32
+        vigenteDesde:
+          type: string
+        vigenteHasta:
+          type: string
+        activo:
+          type: boolean
+    CreatePriorityRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          maxLength: 30
+          minLength: 0
+          pattern: "[A-Z0-9_\\-]+"
+        nombre:
+          type: string
+          maxLength: 60
+          minLength: 0
+        nivel:
+          type: integer
+          format: int32
+          maximum: 10
+          minimum: 1
+        color:
+          type: string
+          pattern: "#[0-9A-Fa-f]{6}"
+      required:
+      - codigo
+      - nivel
+      - nombre
+    PriorityResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        nivel:
+          type: integer
+          format: int32
+        color:
+          type: string
+        activo:
+          type: boolean
+    CreateCategoryRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+          minLength: 0
+          pattern: "[A-Z0-9_\\-]+"
+        nombre:
+          type: string
+          maxLength: 120
+          minLength: 0
+        areaId:
+          type: string
+          minLength: 1
+        prioridadPredeterminadaId:
+          type: string
+          minLength: 1
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+      required:
+      - areaId
+      - codigo
+      - nombre
+      - prioridadPredeterminadaId
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        areaId:
+          type: string
+        prioridadPredeterminadaId:
+          type: string
+        activo:
+          type: boolean
+    CreateAreaRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+          minLength: 0
+          pattern: "[A-Z0-9_\\-]+"
+        nombre:
+          type: string
+          maxLength: 120
+          minLength: 0
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+      required:
+      - codigo
+      - nombre
+    AreaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        activo:
+          type: boolean
+    ChangeReservationStatusRequest:
+      type: object
+      properties:
+        estado:
+          type: string
+          minLength: 1
+        motivo:
+          type: string
+          maxLength: 2000
+          minLength: 0
+      required:
+      - estado
+    ReservationDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        espacioId:
+          type: string
+        espacio:
+          type: string
+        fecha:
+          type: string
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+        estado:
+          type: string
+        estadoOperativo:
+          type: string
+        solicitanteId:
+          type: string
+        motivo:
+          type: string
+        numAsistentes:
+          type: integer
+          format: int32
+        motivoRechazo:
+          type: string
+        creadoEn:
+          type: string
+    ChangePriorityRequest:
+      type: object
+      properties:
+        prioridadId:
+          type: string
+          minLength: 1
+      required:
+      - prioridadId
+    ChangeRequestStatusRequest:
+      type: object
+      properties:
+        estado:
+          type: string
+          minLength: 1
+        motivo:
+          type: string
+          maxLength: 2000
+          minLength: 0
+      required:
+      - estado
+    ChangePasswordRequest:
+      type: object
+      properties:
+        contrasenaActual:
+          type: string
+          minLength: 1
+        contrasenaNueva:
+          type: string
+          minLength: 1
+      required:
+      - contrasenaActual
+      - contrasenaNueva
+    UpdateUserRequest:
+      type: object
+      properties:
+        nombreCompleto:
+          type: string
+          maxLength: 150
+          minLength: 1
+        correo:
+          type: string
+          format: email
+          maxLength: 150
+          minLength: 0
+        telefono:
+          type: string
+          maxLength: 20
+          minLength: 0
+        rol:
+          type: string
+        areaId:
+          type: string
+        activo:
+          type: boolean
+    AccountDecisionRequest:
+      type: object
+      properties:
+        estadoCuenta:
+          type: string
+          enum:
+          - ACTIVA
+          - RECHAZADA
+        motivo:
+          type: string
+          maxLength: 500
+          minLength: 0
+      required:
+      - estadoCuenta
+    UpdateSpaceRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 120
+          minLength: 1
+        tipoEspacioId:
+          type: string
+        areaId:
+          type: string
+        pabellon:
+          type: string
+          maxLength: 60
+          minLength: 0
+        piso:
+          type: string
+          maxLength: 20
+          minLength: 0
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+        ubicacionDetallada:
+          type: string
+          maxLength: 255
+          minLength: 0
+        capacidad:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 1
+        activo:
+          type: boolean
+        requiereAprobacion:
+          type: boolean
+        codigo:
+          type: string
+    UpdateSpaceTypeRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 80
+          minLength: 1
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+        activo:
+          type: boolean
+        codigo:
+          type: string
+    UpdateSlaPolicyRequest:
+      type: object
+      properties:
+        horasObjetivo:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 1
+        horasAviso:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        vigenteDesde:
+          type: string
+          format: date-time
+        vigenteHasta:
+          type: string
+          format: date-time
+        activo:
+          type: boolean
+        categoriaId:
+          type: string
+        prioridadId:
+          type: string
+    RenameRequestStatusRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 60
+          minLength: 0
+        codigo:
+          type: string
+    RequestStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        esFinal:
+          type: boolean
+    UpdatePriorityRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 60
+          minLength: 1
+        nivel:
+          type: integer
+          format: int32
+          maximum: 10
+          minimum: 1
+        color:
+          type: string
+          pattern: "#[0-9A-Fa-f]{6}"
+        activo:
+          type: boolean
+        codigo:
+          type: string
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 120
+          minLength: 1
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+        areaId:
+          type: string
+        prioridadPredeterminadaId:
+          type: string
+        activo:
+          type: boolean
+        codigo:
+          type: string
+    UpdateAreaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 120
+          minLength: 1
+        descripcion:
+          type: string
+          maxLength: 255
+          minLength: 0
+        activo:
+          type: boolean
+        codigo:
+          type: string
+    DayScheduleResponse:
+      type: object
+      properties:
+        horaApertura:
+          type: string
+        horaCierre:
+          type: string
+    IdName:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+    PageResponseSpaceSummaryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpaceSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    SpaceSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        nombre:
+          type: string
+        tipo:
+          $ref: "#/components/schemas/IdName"
+        areaId:
+          type: string
+        pabellon:
+          type: string
+        piso:
+          type: string
+        capacidad:
+          type: integer
+          format: int32
+        horario:
+          $ref: "#/components/schemas/DayScheduleResponse"
+    SpaceAvailabilityResponse:
+      type: object
+      properties:
+        espacioId:
+          type: string
+        fecha:
+          type: string
+        horario:
+          $ref: "#/components/schemas/DayScheduleResponse"
+        libres:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSlotResponse"
+        ocupadas:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSlotResponse"
+    TimeSlotResponse:
+      type: object
+      properties:
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+    PageResponseReservationSummaryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReservationSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseReservationHistoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReservationHistoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    ReservationHistoryResponse:
+      type: object
+      properties:
+        estadoAnterior:
+          type: string
+        estado:
+          type: string
+        actorId:
+          type: string
+        fecha:
+          type: string
+        motivo:
+          type: string
+    PageResponseRequestSummaryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    RequestDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+        categoriaId:
+          type: string
+        categoria:
+          type: string
+        areaId:
+          type: string
+        prioridadId:
+          type: string
+        prioridad:
+          type: string
+        estado:
+          type: string
+        estadoNombre:
+          type: string
+        creadoEn:
+          type: string
+        solicitante:
+          $ref: "#/components/schemas/PersonResponse"
+        ubicacion:
+          type: string
+        descripcion:
+          type: string
+        motivoRechazo:
+          type: string
+        responsableActual:
+          $ref: "#/components/schemas/PersonResponse"
+        ultimoResponsable:
+          $ref: "#/components/schemas/PersonResponse"
+        sla:
+          $ref: "#/components/schemas/SlaResponse"
+        resueltaEn:
+          type: string
+        cerradaEn:
+          type: string
+    SlaResponse:
+      type: object
+      properties:
+        estado:
+          type: string
+        fechaAviso:
+          type: string
+        fechaLimite:
+          type: string
+    PageResponseRequestHistoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestHistoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    RequestHistoryResponse:
+      type: object
+      properties:
+        estadoAnterior:
+          type: string
+        estado:
+          type: string
+        actorId:
+          type: string
+        actorNombre:
+          type: string
+        fecha:
+          type: string
+        motivo:
+          type: string
+    EligibleTechnicianResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombreCompleto:
+          type: string
+        areaId:
+          type: string
+    PageResponseEligibleTechnicianResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EligibleTechnicianResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseCommentResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommentResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseRequestAuditEventResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestAuditEventResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    RequestAuditEventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        accion:
+          type: string
+        campo:
+          type: string
+        valorAnterior:
+          type: string
+        valorNuevo:
+          type: string
+        actorId:
+          type: string
+        fecha:
+          type: string
+    DashboardFiltersResponse:
+      type: object
+      properties:
+        fechaDesde:
+          type: string
+        fechaHasta:
+          type: string
+        areaId:
+          type: string
+    DashboardGroupResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        total:
+          type: integer
+          format: int64
+    DashboardSlaResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        porVencer:
+          type: integer
+          format: int64
+        disponible:
+          type: boolean
+    DashboardSummaryResponse:
+      type: object
+      properties:
+        filtros:
+          $ref: "#/components/schemas/DashboardFiltersResponse"
+        registradas:
+          type: integer
+          format: int64
+        pendientes:
+          type: integer
+          format: int64
+        atendidas:
+          type: integer
+          format: int64
+        porCategoria:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardGroupResponse"
+        porPrioridad:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardGroupResponse"
+        porResponsable:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardGroupResponse"
+        promedioHorasAtencion:
+          type: number
+          format: double
+        porcentajeResueltas:
+          type: number
+          format: double
+        vencidas:
+          $ref: "#/components/schemas/DashboardSlaResponse"
+    AvailableCategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        areaId:
+          type: string
+    PageResponseAvailableCategoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvailableCategoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseUserResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponsePendingAccountResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PendingAccountResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PendingAccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombreCompleto:
+          type: string
+        correo:
+          type: string
+        creadoEn:
+          type: string
+        estadoCuenta:
+          type: string
+    PageResponseSpaceResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpaceResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseSpaceTypeResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpaceTypeResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseSlaPolicyResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SlaPolicyResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    RoleResponse:
+      type: object
+      properties:
+        codigo:
+          type: string
+        nombre:
+          type: string
+    PageResponsePriorityResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriorityResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseCategoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PageResponseAreaResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AreaResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

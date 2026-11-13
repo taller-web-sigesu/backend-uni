@@ -7,8 +7,9 @@ RUN apt-get update \
     && useradd --create-home --user-group --shell /bin/sh app
 
 WORKDIR /workspace
-RUN mkdir -p /workspace/target /home/app/.m2 \
-    && chown -R app:app /workspace /home/app/.m2
+# /data/evidencias existe con dueño app para que el volumen nombrado herede ese dueño al crearse.
+RUN mkdir -p /workspace/target /home/app/.m2 /data/evidencias \
+    && chown -R app:app /workspace /home/app/.m2 /data/evidencias
 ENV MAVEN_CONFIG=/home/app/.m2
 
 COPY --chown=app:app pom.xml ./pom.xml

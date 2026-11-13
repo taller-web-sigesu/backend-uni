@@ -1,6 +1,6 @@
 # Registro y seguimiento de solicitudes
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-03 a HU-06 y bandejas de HU-07 y HU-09.
+> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-03 a HU-06, evidencias de HU-26 y bandejas de HU-07 y HU-09.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md)
 
@@ -52,7 +52,7 @@ Lista solicitudes visibles según el rol autenticado.
 - **Seguridad.** JWT de estudiante, docente, técnico o supervisor. El servidor determina el alcance por propietario, asignación o área.
 - **Entrada.** `page` y `size` opcionales. Para el supervisor, `estado`, `categoriaId` y `prioridadId` opcionales. Sin cuerpo.
 - **Salida.** Página de resúmenes con código, categoría, prioridad, estado y fecha.
-- **Errores.** `400` por filtros o paginación inválidos y `403` para roles fuera del flujo.
+- **Errores.** `400` por filtros o paginación inválidos y `403` para roles fuera del flujo. El administrador recibe `403` en todas las rutas `/requests/**`: consulta las solicitudes mediante el [dashboard y la exportación CSV](dashboard.md).
 
 **Petición de ejemplo**
 
@@ -261,3 +261,44 @@ Content-Type: application/json
   "creadoEn": "2026-11-06T15:20:00Z"
 }
 ```
+
+
+## Evidencias (HU-26)
+
+Archivos JPG, PNG o PDF asociados a una solicitud. Ver y descargar exige poder ver la solicitud (misma regla que el detalle); fuera de alcance se responde `404` sin revelar si la evidencia existe. El administrador recibe `403`. Al registrar una solicitud con evidencias, el cliente primero crea la solicitud y luego sube cada archivo.
+
+### `POST /requests/{id}/attachments`
+
+- **Seguridad.** JWT del solicitante, del técnico con asignación vigente o del supervisor del área. La solicitud no debe estar `CERRADO` ni `RECHAZADO`.
+- **Entrada.** `multipart/form-data` con un archivo en el campo `archivo`. El tipo se detecta por el contenido (firmas de JPEG, PNG y PDF), no por la extensión ni por el `Content-Type`: un PDF enviado como `.png` se guarda como `application/pdf`. Tamaño de 1 byte a 5 MB.
+- **Salida.** `201` con `Location` hacia la descarga y `{id, nombre, tamanoBytes, tipoMime, autorId, autorNombre, creadoEn, puedeEliminar}`. `nombre` es el nombre original sin ruta ni caracteres de control; nunca se usa para guardar el archivo.
+- **Errores.** `400` con `errores[0].campo = "archivo"` y el mensaje «Solo se aceptan archivos JPG, PNG o PDF.», «El tamaño máximo es 5 MB.» o «El archivo está vacío.»; `404` por alcance; `409 LIMITE_EVIDENCIAS` con 5 evidencias vigentes; `409 SOLICITUD_FINALIZADA` si la solicitud está cerrada o rechazada.
+
+```http
+HTTP/1.1 201 Created
+Location: /api/v1/requests/31/attachments/7/content
+Content-Type: application/json
+
+{
+  "id": "7",
+  "nombre": "foto-aula.jpg",
+  "tamanoBytes": 2097152,
+  "tipoMime": "image/jpeg",
+  "autorId": "12",
+  "autorNombre": "Ana Demo",
+  "creadoEn": "2026-11-13T15:00:00Z",
+  "puedeEliminar": true
+}
+```
+
+### `GET /requests/{id}/attachments`
+
+Lista las evidencias vigentes, de la más antigua a la más reciente. `puedeEliminar` es verdadero solo para el autor con la solicitud abierta. Sin paginación (máximo 5).
+
+### `GET /requests/{id}/attachments/{attachmentId}/content`
+
+Descarga el archivo con `Content-Disposition: attachment; filename*=UTF-8''…`, `X-Content-Type-Options: nosniff` y `Cache-Control: no-store`. Con Supabase Storage responde `302` a una URL firmada que vence en 5 minutos. Funciona también con la solicitud cerrada o rechazada.
+
+### `DELETE /requests/{id}/attachments/{attachmentId}`
+
+Solo el autor, con la solicitud abierta. Responde `204`; la evidencia sale del listado (borrado lógico con `eliminado_en` y `eliminado_por_id`), se registra `ELIMINAR_ADJUNTO` en la auditoría y el archivo se borra del almacenamiento. Errores: `403 SOLO_EL_AUTOR`, `404` y `409 SOLICITUD_FINALIZADA`.
