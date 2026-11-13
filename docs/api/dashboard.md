@@ -71,7 +71,7 @@ Exporta los datos visibles del dashboard.
 
 - **Seguridad.** JWT de supervisor para su área o de administrador para cualquier área.
 - **Entrada.** `fechaDesde` y `fechaHasta` obligatorios, como instantes UTC. `areaId` opcional. El intervalo de registro incluye el inicio y excluye el fin. `tipo` obligatorio, `solicitudes` o `indicadores`. Sin cuerpo.
-- **Salida.** CSV UTF-8 descargable. Las solicitudes abarcan todos los registros autorizados que coinciden con los filtros. El CSV de solicitudes vacío conserva los encabezados.
+- **Salida.** CSV UTF-8 descargable. Las solicitudes abarcan todos los registros autorizados que coinciden con los filtros. El CSV de solicitudes vacío conserva los encabezados. Encabezado exacto: `codigo,categoria,area,estado,prioridad,responsable,creadoEn`; `area` es el nombre del área y `responsable` el último técnico asignado (vacío si nunca se asignó). Los valores que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno se prefijan con `'`.
 - **Errores.** `400` por tipo o rango inválido y `403` por área o rol fuera del alcance.
 
 **Petición de ejemplo**
@@ -88,8 +88,8 @@ HTTP/1.1 200 OK
 Content-Type: text/csv; charset=UTF-8
 Content-Disposition: attachment; filename="solicitudes.csv"
 
-codigo,categoria,estado,prioridad,creadoEn
-SOL-2026-000031,Conectividad,NUEVO,Media,2026-11-06T15:00:00Z
+codigo,categoria,area,estado,prioridad,responsable,creadoEn
+SOL-2026-000031,Conectividad,Tecnologías de la Información,NUEVO,Media,,2026-11-06T15:00:00Z
 ```
 
 Con `tipo=indicadores`, la descarga se llama `indicadores.csv` y devuelve una fila por métrica o grupo. Extracto del formato propuesto.

@@ -1,7 +1,7 @@
 # Arquitectura del backend — backend-uni
 
-> **Estado:** aplicación Spring Boot base implementada; plan de implementación aprobado, módulos de negocio pendientes.
-> **Última actualización:** 2026-11-02.
+> **Estado:** HU-01 a HU-29 implementadas y verificadas con pruebas de integración; pendiente revisión de PR.
+> **Última actualización:** 2026-11-13.
 > **Alcance:** API, reglas de negocio, autorización y persistencia.
 
 ## Referencias y propiedad
@@ -10,14 +10,11 @@ La [arquitectura global](https://github.com/taller-web-sigesu/infra-uni/blob/mai
 
 ## Estado actual comprobado en archivos
 
-- `pom.xml`: Java 21 y Spring Boot 4.1.2; Spring Web MVC, Data JPA, Actuator, conector MySQL y DevTools.
-- `src/main/java/pe/edu/universidad/servicios/BackendApplication.java`: arranque de la aplicación.
-- `status/StatusController.java`: `GET /api/v1/status`, devuelve `service: backend` y `status: UP`; no comprueba por sí mismo la base de datos.
-- `src/main/resources/application.yml`: datasource por variables de entorno, `ddl-auto: none`, `open-in-view: false`, zona JDBC UTC y exposición de salud en `/actuator/health`.
-- `Dockerfile.dev`: entorno de desarrollo usado por Compose.
-- Aún no existen módulos de negocio, entidades, migraciones, OpenAPI, Spring Security, Bean Validation, Flyway ni pruebas configuradas en el proyecto.
-
-La revisión de archivos no confirma compilación, ejecución ni conexión real a MySQL.
+- Módulos `auth`, `users`, `catalogs`, `requests`, `attachments`, `management`, `sla`, `audit`, `dashboard`, `reservations`, `status` y `shared` implementados con las 55 operaciones de negocio del [diseño REST](docs/API-DISENIO.md), las 8 de HU-26 a HU-29 (auto-registro, aprobación de cuentas, restablecimiento y evidencias) y `GET /api/v1/status`.
+- Persistencia con `JdbcClient` y SQL explícito (sin Hibernate) para controlar bloqueos, versión de fila, columnas generadas y UTC; esquema versionado con Flyway (`V1`, `V2` y datos ficticios opcionales en `db/demo`). Ver [DATABASE.md](docs/DATABASE.md).
+- Spring Security sin estado con JWT de 15 minutos, sesión revocable en base, refresh rotativo en cookie y primer ingreso restringido. Ver [SECURITY.md](docs/SECURITY.md).
+- Contrato exportado en [`docs/api/openapi.yaml`](docs/api/openapi.yaml); errores `application/problem+json` con `codigo` y `correlationId`.
+- Pruebas: unitarias de políticas y de integración contra MySQL 8.4.13 con Testcontainers (`mvn verify`); `Dockerfile` de ejecución con prueba de humo (`scripts/smoke-image.sh`); workflow de CI en `.github/workflows/backend-ci.yml`.
 
 ## Componentes y API objetivo
 
@@ -55,6 +52,7 @@ src/main/java/pe/edu/universidad/servicios/
 ├── auth/
 ├── users/
 ├── requests/
+├── attachments/   # evidencias (HU-26) y almacenamiento local o Supabase
 ├── management/
 ├── catalogs/
 ├── reservations/
@@ -87,15 +85,15 @@ Cada módulo mantiene sus controllers/DTO, services y entities/repositories; cre
 
 ### Evidencias adjuntas
 
-- **Estado:** diseño pendiente hasta definir requisitos de carga, límites y proveedor.
-- **Uso propuesto:** fotos/documentos de solicitudes, con metadatos en MySQL y archivos en almacenamiento persistente separado.
+- **Estado:** implementado (HU-26). Metadatos en `adjuntos_solicitud`; archivos detrás de `AttachmentStorage`: volumen local (`APP_STORAGE_PROVIDER=local`, por defecto) o bucket privado de Supabase Storage (`supabase`, Fase 5, ADR-0004) con URLs firmadas de 5 minutos.
+- **Uso:** JPG, PNG o PDF de hasta 5 MB y 5 vigentes por solicitud, detectados por contenido.
 - **Seguridad:** validar tipo, contenido y tamaño; exigir autorización también al descargar. No almacenar archivos críticos en disco efímero del contenedor ni registrar URLs públicas sin protección.
 
 ### Almacenes excluidos por defecto
 
 No se requiere Redis, Elasticsearch, RabbitMQ, un almacén analítico ni una segunda base de datos para el MVP. Toda adición requiere una necesidad medida y un ADR.
 
-El [diseño de base de datos](https://github.com/taller-web-sigesu/infra-uni/blob/main/DISENIO-BD.md) existe como documento compartido. `docs/DATABASE.md` y las migraciones aún están pendientes; las migraciones serán la referencia del esquema implementado. La configuración actual no crea tablas automáticamente.
+El [diseño de base de datos](https://github.com/taller-web-sigesu/infra-uni/blob/main/DISENIO-BD.md) existe como documento compartido. Las migraciones de `src/main/resources/db/migration/` son la referencia del esquema implementado ([DATABASE.md](docs/DATABASE.md)). La configuración actual no crea tablas automáticamente.
 
 ## Seguridad objetivo
 

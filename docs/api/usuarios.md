@@ -1,6 +1,8 @@
 # Usuarios y roles
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-15.
+> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-15, HU-28 y HU-29.
+>
+> `UserResponse` incluye además `estadoCuenta` (`PENDIENTE`, `ACTIVA` o `RECHAZADA`), `origenRegistro` (`ADMINISTRADOR` o `AUTO_REGISTRO`) y `creadoEn`.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md)
 
@@ -154,6 +156,55 @@ Content-Type: application/json
   "areaId": "2",
   "activo": false
 }
+```
+
+## `GET /admin/users/pending`
+
+Bandeja de cuentas auto-registradas pendientes de aprobación (HU-28).
+
+- **Seguridad.** JWT de administrador; otros roles reciben `403`.
+- **Entrada.** `page` y `size` opcionales.
+- **Salida.** Página de `{id, nombreCompleto, correo, creadoEn, estadoCuenta}` ordenada de la más antigua a la más reciente.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "items": [
+    { "id": "41", "nombreCompleto": "Lucía Demo", "correo": "lucia.demo@unmsm.edu.pe", "creadoEn": "2026-11-13T14:05:00Z", "estadoCuenta": "PENDIENTE" }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+## `PATCH /admin/users/{id}/account-status`
+
+Aprueba o rechaza una cuenta auto-registrada (HU-28). Guarda quién decidió y cuándo, y lo registra en la auditoría (`APROBAR_CUENTA` o `RECHAZAR_CUENTA`).
+
+- **Seguridad.** JWT de administrador.
+- **Entrada.** `{"estadoCuenta": "ACTIVA"}` o `{"estadoCuenta": "RECHAZADA", "motivo": "..."}`; el motivo es obligatorio al rechazar (hasta 500 caracteres).
+- **Salida.** `200` con la cuenta (`UserResponse`). Al aprobar, el usuario ya puede iniciar sesión con la contraseña que registró.
+- **Errores.** `400` sin motivo al rechazar, `403` para otros roles, `404` si la cuenta no existe y `409 CUENTA_NO_PENDIENTE` si no está pendiente. Una cuenta `RECHAZADA` puede aprobarse después; una `ACTIVA` no admite esta operación.
+
+## `POST /admin/users/{id}/password-reset`
+
+Restablece la contraseña de un usuario que la olvidó (HU-29).
+
+- **Seguridad.** JWT de administrador. El administrador no puede restablecer la suya (`403`): usa `PATCH /auth/password`.
+- **Entrada.** Sin cuerpo.
+- **Salida.** `200` con `{"contrasenaTemporal": "..."}` y `Cache-Control: no-store`. Se muestra una sola vez: solo se guarda su hash. En la misma transacción se revocan todas las sesiones del usuario y se exige cambiarla en el próximo ingreso. La auditoría (`RESTABLECER_CONTRASENA`) no guarda la contraseña.
+- **Errores.** `403` para otros roles o sobre la cuenta propia, `404` si no existe y `409 CUENTA_NO_ACTIVA` si la cuenta está desactivada, pendiente o rechazada.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{ "contrasenaTemporal": "<contrasena-temporal-de-ejemplo>" }
 ```
 
 ## `GET /admin/roles`
