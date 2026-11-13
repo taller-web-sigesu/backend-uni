@@ -1,0 +1,90 @@
+name: backend-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Contrato, compilación, migraciones y pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar OpenAPI
+        run: npx --yes @redocly/cli@1.34.5 lint docs/api/openapi.yaml --extends=minimal
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Unitarias (Surefire) e integración contra MySQL 8.4.13 con Testcontainers (Failsafe).
+      - name: mvn verify
+        run: mvn -B -ntp verify
+
+      - name: Contrato publicado igual al versionado
+        run: |
+          if ! diff -q docs/api/openapi.yaml target/openapi.yaml; then
+            echo "docs/api/openapi.yaml no coincide con el contrato publicado por la aplicación."
+            echo "Regenérelo con: mvn verify && cp target/openapi.yaml docs/api/openapi.yaml"
+            diff -u docs/api/openapi.yaml target/openapi.yaml | head -n 80
+            exit 1
+          fi
+
+      - name: Reportes de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: |
+            target/surefire-reports/
+            target/failsafe-reports/
+          retention-days: 14
+
+  image:
+    name: Imagen y prueba de humo
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir y probar la imagen contra MySQL temporal
+        run: bash scripts/smoke-image.sh
+
+  codeql:
+    name: Análisis estático (CodeQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          build-mode: none
+      - uses: github/codeql-action/analyze@v3
+
+  dependency-review:
+    name: Escaneo de dependencias
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

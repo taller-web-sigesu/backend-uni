@@ -5,18 +5,27 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/uni_services?allowPublicKeyRetrieval=true&sslMode=DISABLED}
     username: ${SPRING_DATASOURCE_USERNAME:uni_app}
     password: ${SPRING_DATASOURCE_PASSWORD:uni_local_app_2026}
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
+    hikari:
+      # Instantes de sesión, valores por defecto y UTC_TIMESTAMP en UTC.
+      connection-init-sql: "SET time_zone = '+00:00'"
+  servlet:
+    multipart:
+      # Un poco más que el máximo de 5 MB por evidencia: el servicio valida el límite exacto con un mensaje claro.
+      max-file-size: 6MB
+      max-request-size: 6MB
+  flyway:
+    # Para cargar datos ficticios: APP_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/demo
+    locations: ${APP_FLYWAY_LOCATIONS:classpath:db/migration}
 
 server:
   address: 0.0.0.0
   port: ${SERVER_PORT:8080}
+  tomcat:
+    # Lee el resto de un archivo rechazado por tamaño para poder responder el 400 sin cortar la conexión.
+    max-swallow-size: 16MB
+  error:
+    include-message: never
+    include-stacktrace: never
 
 management:
   endpoints:
@@ -26,3 +35,43 @@ management:
   endpoint:
     health:
       show-details: never
+  observations:
+    key-values:
+      application: backend-uni
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  paths-to-match: /api/v1/**
+
+logging:
+  pattern:
+    correlation: "[cid:%X{correlationId:-}] "
+
+app:
+  security:
+    # Solo para desarrollo local. En CI y despliegues se define APP_JWT_SECRET (mínimo 32 caracteres).
+    jwt-secret: ${APP_JWT_SECRET:gestal-local-dev-secret-cambiar-en-despliegue-2026}
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+    cookie-secure: ${APP_COOKIE_SECURE:true}
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
+    login-max-attempts: ${APP_LOGIN_MAX_ATTEMPTS:5}
+    login-window: ${APP_LOGIN_WINDOW:15m}
+  registration:
+    email-domain: ${APP_REGISTRATION_EMAIL_DOMAIN:unmsm.edu.pe}
+    max-per-ip-per-hour: ${APP_REGISTRATION_MAX_PER_IP_PER_HOUR:10}
+  storage:
+    # local: volumen Docker o carpeta del servidor. supabase: bucket privado (Fase 5, ADR-0004).
+    provider: ${APP_STORAGE_PROVIDER:local}
+    local-dir: ${APP_STORAGE_LOCAL_DIR:./data/evidencias}
+    supabase:
+      url: ${APP_STORAGE_SUPABASE_URL:}
+      service-key: ${APP_STORAGE_SUPABASE_SERVICE_KEY:}
+      bucket: ${APP_STORAGE_SUPABASE_BUCKET:evidencias-solicitudes}
+  bootstrap-admin:
+    correo: ${APP_BOOTSTRAP_ADMIN_EMAIL:}
+    contrasena: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+    nombre: ${APP_BOOTSTRAP_ADMIN_NAME:Administrador inicial}
