@@ -1,0 +1,19 @@
+app:
+  security:
+    jwt-secret: gestal-test-secret-solo-para-pruebas-automatizadas
+    cookie-secure: true
+    allowed-origins: http://localhost:3000
+    login-max-attempts: 5
+    login-window: 15m
+  storage:
+    provider: local
+    local-dir: target/test-evidencias
+  registration:
+    email-domain: unmsm.edu.pe
+    # Alto para que las pruebas compartan IP sin chocar; RegistrationRateLimitIT lo baja en su propio contexto.
+    max-per-ip-per-hour: 1000
+
+logging:
+  level:
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN
