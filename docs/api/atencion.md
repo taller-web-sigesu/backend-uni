@@ -1,6 +1,6 @@
 # Asignación, prioridad y ciclo de vida
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-07 a HU-11.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-07 a HU-11.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md) · [Reglas de datos](https://github.com/taller-web-sigesu/infra-uni/blob/269a0bcf7f90a68fdb16a80b177337dc6527b6fd/DISENIO-BD.md#7-reglas-de-integridad-y-negocio)
 

@@ -1,6 +1,6 @@
 # Usuarios y roles
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-15, HU-28 y HU-29.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-15, HU-28 y HU-29.
 >
 > `UserResponse` incluye además `estadoCuenta` (`PENDIENTE`, `ACTIVA` o `RECHAZADA`), `origenRegistro` (`ADMINISTRADOR` o `AUTO_REGISTRO`) y `creadoEn`.
 

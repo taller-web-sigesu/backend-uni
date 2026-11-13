@@ -1,6 +1,6 @@
 # Catálogos del servicio
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-03, HU-16 y HU-17.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-03, HU-16 y HU-17.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md)
 

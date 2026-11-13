@@ -1,6 +1,6 @@
 # Reserva de ambientes
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-21 a HU-25.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-21 a HU-25.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md) · [Reglas de reservas](https://github.com/taller-web-sigesu/infra-uni/blob/269a0bcf7f90a68fdb16a80b177337dc6527b6fd/DISENIO-BD.md#78-reservas-de-ambientes)
 

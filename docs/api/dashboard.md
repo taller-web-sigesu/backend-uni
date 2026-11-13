@@ -1,6 +1,6 @@
 # Dashboard y reportes
 
-> Contrato propuesto para revisión. Los ejemplos usan datos ficticios. HU-12 a HU-14.
+> Contrato implementado; la referencia exacta es [openapi.yaml](openapi.yaml). Los ejemplos usan datos ficticios. HU-12 a HU-14.
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md) · [Definición de indicadores](https://github.com/taller-web-sigesu/infra-uni/blob/269a0bcf7f90a68fdb16a80b177337dc6527b6fd/DISENIO-BD.md#10-dashboard-los-9-indicadores)
 
