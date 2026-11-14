@@ -1,7 +1,7 @@
 # Arquitectura del backend — backend-uni
 
-> **Estado:** HU-01 a HU-29 implementadas y verificadas con pruebas de integración; pendiente revisión de PR.
-> **Última actualización:** 2026-11-13.
+> **Estado:** HU-01 a HU-29 implementadas, verificadas con pruebas de integración y desplegadas en staging y producción; Release Candidate `v1.0.0-rc.1`.
+> **Última actualización:** 2026-11-14.
 > **Alcance:** API, reglas de negocio, autorización y persistencia.
 
 ## Referencias y propiedad
@@ -22,7 +22,7 @@ La [arquitectura global](https://github.com/taller-web-sigesu/infra-uni/blob/mai
 
 **Tecnologías propuestas:** Java, Spring Boot, Spring Web, Spring Security, Bean Validation, Spring Data JPA, Flyway, MySQL, Maven y OpenAPI.
 
-**Despliegue propuesto:** contenedor Docker en Render o plataforma equivalente; disponibilidad, límites y costes pendientes de confirmar.
+**Despliegue:** contenedor Docker en Render. Staging (`uniservice-backend-staging`) desde `main` con auto-deploy; producción (`uniservice-backend-prod`) desde `production` con `Auto-Deploy: Off`, aprobación del environment y smoke. MySQL gestionado en Railway, una instancia por entorno.
 
 | Módulo lógico | Responsabilidad | Restricciones importantes |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ Cada módulo mantiene sus controllers/DTO, services y entities/repositories; cre
 
 ### Evidencias adjuntas
 
-- **Estado:** implementado (HU-26). Metadatos en `adjuntos_solicitud`; archivos detrás de `AttachmentStorage`: volumen local (`APP_STORAGE_PROVIDER=local`, por defecto) o bucket privado de Supabase Storage (`supabase`, Fase 5, ADR-0004) con URLs firmadas de 5 minutos.
+- **Estado:** implementado (HU-26). Metadatos en `adjuntos_solicitud`; archivos detrás de `AttachmentStorage`: volumen local (`APP_STORAGE_PROVIDER=local`, por defecto) o bucket privado de Supabase Storage (`supabase`, evolución acordada, ADR-0004) con URLs firmadas de 5 minutos. En staging y producción del Release Candidate se usa `local` en `/tmp/evidencias`; la persistencia definitiva queda pendiente.
 - **Uso:** JPG, PNG o PDF de hasta 5 MB y 5 vigentes por solicitud, detectados por contenido.
 - **Seguridad:** validar tipo, contenido y tamaño; exigir autorización también al descargar. No almacenar archivos críticos en disco efímero del contenedor ni registrar URLs públicas sin protección.
 
@@ -109,7 +109,7 @@ El [diseño de base de datos](https://github.com/taller-web-sigesu/infra-uni/blo
 
 **Matriz inicial de permisos (a formalizar en `SECURITY.md`):** solicitante crea y consulta solicitudes propias; técnico atiende únicamente las asignadas; supervisor evalúa, prioriza, asigna y cierra; administrador gestiona usuarios y catálogos. La administración no obtiene automáticamente permiso para leer información privada de todas las solicitudes si no existe necesidad aprobada.
 
-Estos controles describen el objetivo, no capacidades de la API base actual. Formalizar permisos en `docs/SECURITY.md` al implementarlos y coordinar la sesión con frontend.
+Estos controles están implementados y documentados en `docs/SECURITY.md`; las pruebas de autorización por rol y por recurso corren en CI.
 
 ## Plan de implementación
 
@@ -120,7 +120,7 @@ El plan aprobado está en [`infra-uni/docs/superpowers/plans/2026-11-04-ingenier
 3. **Migraciones:** `V1__esquema_inicial.sql`, `V2__catalogos_semilla.sql` y `V3__datos_demostracion.sql` opcional, derivadas de `DISENIO-BD.md`.
 4. **Módulos:** `auth` (HU-01/HU-02), `users` y `catalogs` (HU-15 a HU-18), `requests` (HU-03 a HU-06), `management` (HU-07 a HU-11), `dashboard` (HU-12 a HU-14), auditoría/encuesta (HU-19/HU-20) y `reservations` (HU-21 a HU-25).
 5. **Pruebas:** JUnit 5 + Mockito y Spring Boot Test + Testcontainers MySQL; autorización por recurso, transiciones inválidas y migraciones.
-6. **Producción:** `Dockerfile` de producción, healthcheck, imágenes versionadas y workflow CI con `mvn verify`.
+6. **Producción:** `Dockerfile` de producción, healthcheck, imágenes versionadas y workflow CI con `mvn verify`. **Completado:** Render usa el `Dockerfile` y `deploy-production.yml` controla el despliegue con aprobación y smoke.
 
 **Decisiones relacionadas:** [ADR-0002](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0002-autenticacion-sesion.md) (sesión), [ADR-0003](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0003-observabilidad-retencion.md) (observabilidad) y [ADR-0005](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0005-ci-cd-calidad.md) (CI/CD).
 
@@ -130,6 +130,6 @@ Usar el entorno descrito en [DOCKER.md](https://github.com/taller-web-sigesu/inf
 
 Actuator de salud ya está configurado. Métricas Micrometer, logs estructurados, correlación, trazas y alertas son objetivos pendientes; proteger endpoints administrativos y evitar datos sensibles en logs. Ver [ADR-0003](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0003-observabilidad-retencion.md).
 
-Herramientas propuestas: JUnit 5 + Mockito para reglas, Spring Boot Test + Testcontainers MySQL para persistencia/API, análisis estático y de dependencias, SAST/DAST controlado y k6 para carga. Cubrir permisos por recurso, transiciones, validaciones, transacciones y migraciones. No hay suite configurada actualmente.
+Herramientas configuradas: JUnit 5 + Mockito para reglas, Spring Boot Test + Testcontainers MySQL para persistencia/API, análisis estático y de dependencias. DAST y k6 quedan pendientes. Cubren permisos por recurso, transiciones, validaciones, transacciones y migraciones.
 
-CI objetivo: compilación, unitarias, integración con MySQL de prueba, análisis, imagen Docker, staging y smoke tests (ver [ADR-0005](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0005-ci-cd-calidad.md)). Un `Dockerfile` de producción sigue pendiente; el actual es `Dockerfile.dev`. No afirmar resultados sin ejecutarlos y revisar su salida.
+CI implementado: lint de OpenAPI, compilación, unitarias, integración con MySQL de prueba, análisis, imagen Docker y smoke tests (ver [ADR-0005](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/adr/ADR-0005-ci-cd-calidad.md)). El `Dockerfile` de producción existe y se usa en Render. No afirmar resultados sin ejecutarlos y revisar su salida.
