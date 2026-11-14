@@ -24,7 +24,7 @@ public final class RequestDtos {
     }
 
     public record RequestSummaryResponse(String id, String codigo, String categoriaId, String areaId, String prioridadId,
-            String estado, String creadoEn, PersonResponse responsableActual) {
+            String categoria, String prioridad, String estado, String creadoEn, PersonResponse responsableActual) {
     }
 
     public record SlaResponse(String estado, String fechaAviso, String fechaLimite) {
