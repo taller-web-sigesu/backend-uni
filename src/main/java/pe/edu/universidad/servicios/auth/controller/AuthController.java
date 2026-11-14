@@ -111,7 +111,8 @@ public class AuthController {
     private ResponseEntity<SessionResponse> withSession(IssuedSession issued) {
         var user = issued.user();
         SessionResponse body = new SessionResponse(issued.accessToken(), issued.accessTtlSeconds(),
-                new SessionUserResponse(Ids.str(user.id()), user.nombreCompleto(), user.role().name(), Ids.str(user.areaId())),
+                new SessionUserResponse(Ids.str(user.id()), user.nombreCompleto(), user.role().name(), Ids.str(user.areaId()),
+                        user.areaNombre()),
                 user.debeCambiarContrasena());
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookies.create(issued.refreshToken(), issued.refreshExpiresAt()).toString())

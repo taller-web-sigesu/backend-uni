@@ -19,10 +19,12 @@ import pe.edu.universidad.servicios.shared.security.RoleCode;
 public class UserRepository {
 
     private static final String SELECT = """
-            SELECT u.id, r.codigo AS rol, u.area_id, u.nombre_completo, u.correo, u.hash_contrasena,
-                   u.telefono, u.activo, u.estado_cuenta, u.debe_cambiar_contrasena, u.origen_registro, u.creado_en
+            SELECT u.id, r.codigo AS rol, u.area_id, a.nombre AS area_nombre, u.nombre_completo, u.correo,
+                   u.hash_contrasena, u.telefono, u.activo, u.estado_cuenta, u.debe_cambiar_contrasena,
+                   u.origen_registro, u.creado_en
             FROM usuarios u
             JOIN roles r ON r.id = u.rol_id
+            LEFT JOIN areas a ON a.id = u.area_id
             """;
 
     private final JdbcClient jdbc;
@@ -165,6 +167,7 @@ public class UserRepository {
                 rs.getLong("id"),
                 RoleCode.valueOf(rs.getString("rol")),
                 Db.nullableLong(rs, "area_id"),
+                rs.getString("area_nombre"),
                 rs.getString("nombre_completo"),
                 rs.getString("correo"),
                 rs.getString("hash_contrasena"),

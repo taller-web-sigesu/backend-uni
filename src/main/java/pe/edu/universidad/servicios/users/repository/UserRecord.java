@@ -8,6 +8,7 @@ public record UserRecord(
         long id,
         RoleCode role,
         Long areaId,
+        String areaNombre,
         String nombreCompleto,
         String correo,
         String hashContrasena,

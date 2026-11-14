@@ -32,7 +32,7 @@ public final class AuthDtos {
     public record RegisterResponse(String mensaje) {
     }
 
-    public record SessionUserResponse(String id, String nombreCompleto, String rol, String areaId) {
+    public record SessionUserResponse(String id, String nombreCompleto, String rol, String areaId, String areaNombre) {
     }
 
     public record SessionResponse(String tokenAcceso, long expiraEnSegundos, SessionUserResponse usuario,
