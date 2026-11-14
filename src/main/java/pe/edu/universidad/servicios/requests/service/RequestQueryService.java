@@ -76,7 +76,7 @@ public class RequestQueryService {
     public RequestDetailResponse detail(AuthenticatedActor actor, long id) {
         RequestRow row = access.requireVisible(actor, id);
         Person ultimo = row.esFinal() ? activity.lastTechnician(id).orElse(null) : null;
-        return RequestMapper.detail(row, ultimo, clock.instant());
+        return RequestMapper.detail(row, ultimo, activity.surveyExists(id), clock.instant());
     }
 
     public PageResponse<RequestHistoryResponse> history(AuthenticatedActor actor, long id, PageQuery page) {
@@ -99,7 +99,8 @@ public class RequestQueryService {
     public PageResponse<RequestAuditEventResponse> auditEvents(AuthenticatedActor actor, long id, PageQuery page) {
         actor.requireRole(RoleCode.SUPERVISOR);
         access.requireVisible(actor, id);
-        return auditQuery.forRequest(id, page).map(e -> new RequestAuditEventResponse(Ids.str(e.id()), e.accion(),
-                e.campo(), e.valorAnterior(), e.valorNuevo(), Ids.str(e.actorId()), Times.iso(e.ocurridoEn())));
+        return auditQuery.forRequest(id, page).map(e -> new RequestAuditEventResponse(Ids.str(e.id()), e.entidad(),
+                e.accion(), e.campo(), e.valorAnterior(), e.valorNuevo(), Ids.str(e.actorId()),
+                Times.iso(e.ocurridoEn())));
     }
 }

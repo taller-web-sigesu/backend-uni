@@ -20,14 +20,15 @@ public class ServiceRequestRepository {
 
     private static final String SELECT = """
             SELECT s.id, s.codigo, s.solicitante_id, sol.nombre_completo AS solicitante_nombre, s.categoria_id,
-                   c.nombre AS categoria_nombre, s.area_id, s.prioridad_id, p.codigo AS prioridad_codigo,
-                   p.nombre AS prioridad_nombre, e.codigo AS estado_codigo, e.nombre AS estado_nombre, e.es_final,
-                   s.responsable_actual_id, tec.nombre_completo AS responsable_nombre, s.ubicacion, s.descripcion,
-                   s.motivo_rechazo, s.fecha_limite_sla, s.fecha_aviso_sla, s.resuelta_en, s.cerrada_en,
-                   s.version_fila, s.creado_en
+                   c.nombre AS categoria_nombre, s.area_id, a.nombre AS area_nombre, s.prioridad_id,
+                   p.codigo AS prioridad_codigo, p.nombre AS prioridad_nombre, e.codigo AS estado_codigo,
+                   e.nombre AS estado_nombre, e.es_final, s.responsable_actual_id,
+                   tec.nombre_completo AS responsable_nombre, s.ubicacion, s.descripcion, s.motivo_rechazo,
+                   s.fecha_limite_sla, s.fecha_aviso_sla, s.resuelta_en, s.cerrada_en, s.version_fila, s.creado_en
             FROM solicitudes s
             JOIN usuarios sol ON sol.id = s.solicitante_id
             JOIN categorias c ON c.id = s.categoria_id
+            JOIN areas a ON a.id = s.area_id
             JOIN prioridades p ON p.id = s.prioridad_id
             JOIN estados_solicitud e ON e.id = s.estado_id
             LEFT JOIN usuarios tec ON tec.id = s.responsable_actual_id
@@ -134,8 +135,9 @@ public class ServiceRequestRepository {
     static RequestRow map(ResultSet rs, int n) throws SQLException {
         return new RequestRow(
                 rs.getLong("id"), rs.getString("codigo"), rs.getLong("solicitante_id"), rs.getString("solicitante_nombre"),
-                rs.getLong("categoria_id"), rs.getString("categoria_nombre"), rs.getLong("area_id"), rs.getLong("prioridad_id"),
-                rs.getString("prioridad_codigo"), rs.getString("prioridad_nombre"), rs.getString("estado_codigo"),
+                rs.getLong("categoria_id"), rs.getString("categoria_nombre"), rs.getLong("area_id"),
+                rs.getString("area_nombre"), rs.getLong("prioridad_id"), rs.getString("prioridad_codigo"),
+                rs.getString("prioridad_nombre"), rs.getString("estado_codigo"),
                 rs.getString("estado_nombre"), rs.getBoolean("es_final"), Db.nullableLong(rs, "responsable_actual_id"),
                 rs.getString("responsable_nombre"), rs.getString("ubicacion"), rs.getString("descripcion"),
                 rs.getString("motivo_rechazo"), Db.instant(rs, "fecha_limite_sla"), Db.instant(rs, "fecha_aviso_sla"),

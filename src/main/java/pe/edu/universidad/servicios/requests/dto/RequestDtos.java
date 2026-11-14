@@ -24,17 +24,17 @@ public final class RequestDtos {
     }
 
     public record RequestSummaryResponse(String id, String codigo, String categoriaId, String areaId, String prioridadId,
-            String estado, String creadoEn, PersonResponse responsableActual) {
+            String categoria, String prioridad, String estado, String creadoEn, PersonResponse responsableActual) {
     }
 
     public record SlaResponse(String estado, String fechaAviso, String fechaLimite) {
     }
 
     public record RequestDetailResponse(String id, String codigo, String categoriaId, String categoria, String areaId,
-            String prioridadId, String prioridad, String estado, String estadoNombre, String creadoEn,
+            String area, String prioridadId, String prioridad, String estado, String estadoNombre, String creadoEn,
             PersonResponse solicitante, String ubicacion, String descripcion, String motivoRechazo,
             PersonResponse responsableActual, PersonResponse ultimoResponsable, SlaResponse sla,
-            String resueltaEn, String cerradaEn) {
+            String resueltaEn, String cerradaEn, boolean encuestaRespondida) {
     }
 
     public record RequestHistoryResponse(String estadoAnterior, String estado, String actorId, String actorNombre,
@@ -56,7 +56,7 @@ public final class RequestDtos {
     public record SurveyResponse(String id, String solicitudId, int calificacion, String comentario) {
     }
 
-    public record RequestAuditEventResponse(String id, String accion, String campo, String valorAnterior,
-            String valorNuevo, String actorId, String fecha) {
+    public record RequestAuditEventResponse(String id, String entidad, String accion, String campo,
+            String valorAnterior, String valorNuevo, String actorId, String fecha) {
     }
 }

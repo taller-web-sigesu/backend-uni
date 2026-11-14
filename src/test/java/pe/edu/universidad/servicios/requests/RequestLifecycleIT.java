@@ -70,6 +70,7 @@ class RequestLifecycleIT extends IntegrationTest {
         String id = created.text("id");
 
         Response detail = api.get("/api/v1/requests/" + id, studentToken);
+        assertThat(detail.text("area")).startsWith("Área ");
         assertThat(detail.json().get("sla").get("estado").asString()).isEqualTo("EN_PLAZO");
         assertThat(detail.json().get("sla").get("fechaLimite").asString()).isNotBlank();
 
@@ -111,8 +112,10 @@ class RequestLifecycleIT extends IntegrationTest {
         assertThat(api.get("/api/v1/requests/" + id + "/audit-events", api.token(otherSupervisor)).status()).isEqualTo(404);
         assertThat(api.get("/api/v1/requests/" + id + "/audit-events", studentToken).status()).isEqualTo(403);
 
+        assertThat(api.get("/api/v1/requests/" + id, studentToken).json().get("encuestaRespondida").asBoolean()).isFalse();
         Response survey = api.post("/api/v1/requests/" + id + "/survey", studentToken, Map.of("calificacion", 5, "comentario", "Bien."));
         assertThat(survey.status()).isEqualTo(201);
+        assertThat(api.get("/api/v1/requests/" + id, studentToken).json().get("encuestaRespondida").asBoolean()).isTrue();
         Response duplicated = api.post("/api/v1/requests/" + id + "/survey", studentToken, Map.of("calificacion", 4));
         assertThat(duplicated.status()).isEqualTo(409);
     }
@@ -151,6 +154,8 @@ class RequestLifecycleIT extends IntegrationTest {
         assertThat(api.post("/api/v1/requests/" + id + "/comments", studentToken, Map.of("contenido", "")).status()).isEqualTo(400);
         Response list = api.get("/api/v1/requests/" + id + "/comments", supervisorToken);
         assertThat(list.json().get("totalElements").asLong()).isEqualTo(1);
+        Response audit = api.get("/api/v1/requests/" + id + "/audit-events", supervisorToken);
+        assertThat(audit.body()).contains("\"entidad\":\"comentarios\"").contains("\"accion\":\"COMENTAR\"");
     }
 
     @Test

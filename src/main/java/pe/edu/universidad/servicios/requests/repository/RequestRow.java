@@ -13,6 +13,7 @@ public record RequestRow(
         long categoriaId,
         String categoriaNombre,
         long areaId,
+        String areaNombre,
         long prioridadId,
         String prioridadCodigo,
         String prioridadNombre,

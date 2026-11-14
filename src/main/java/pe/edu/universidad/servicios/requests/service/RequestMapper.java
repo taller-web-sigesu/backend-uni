@@ -19,18 +19,19 @@ public final class RequestMapper {
 
     public static RequestSummaryResponse summary(RequestRow r) {
         return new RequestSummaryResponse(Ids.str(r.id()), r.codigo(), Ids.str(r.categoriaId()), Ids.str(r.areaId()),
-                Ids.str(r.prioridadId()), r.estadoCodigo(), Times.iso(r.creadoEn()), responsable(r));
+                Ids.str(r.prioridadId()), r.categoriaNombre(), r.prioridadNombre(), r.estadoCodigo(),
+                Times.iso(r.creadoEn()), responsable(r));
     }
 
-    public static RequestDetailResponse detail(RequestRow r, Person ultimo, Instant now) {
+    public static RequestDetailResponse detail(RequestRow r, Person ultimo, boolean encuestaRespondida, Instant now) {
         String slaStatus = SlaResolutionService.status(r.esFinal(), r.fechaLimiteSla(), r.fechaAvisoSla(), now);
         return new RequestDetailResponse(Ids.str(r.id()), r.codigo(), Ids.str(r.categoriaId()), r.categoriaNombre(),
-                Ids.str(r.areaId()), Ids.str(r.prioridadId()), r.prioridadNombre(), r.estadoCodigo(), r.estadoNombre(),
+                Ids.str(r.areaId()), r.areaNombre(), Ids.str(r.prioridadId()), r.prioridadNombre(), r.estadoCodigo(), r.estadoNombre(),
                 Times.iso(r.creadoEn()), new PersonResponse(Ids.str(r.solicitanteId()), r.solicitanteNombre()),
                 r.ubicacion(), r.descripcion(), r.motivoRechazo(), responsable(r),
                 ultimo == null ? null : new PersonResponse(Ids.str(ultimo.id()), ultimo.nombreCompleto()),
                 new SlaResponse(slaStatus, Times.iso(r.fechaAvisoSla()), Times.iso(r.fechaLimiteSla())),
-                Times.iso(r.resueltaEn()), Times.iso(r.cerradaEn()));
+                Times.iso(r.resueltaEn()), Times.iso(r.cerradaEn()), encuestaRespondida);
     }
 
     private static PersonResponse responsable(RequestRow r) {

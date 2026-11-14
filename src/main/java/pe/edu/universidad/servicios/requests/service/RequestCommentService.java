@@ -40,7 +40,7 @@ public class RequestCommentService {
         Instant now = clock.instant();
         String contenido = body.contenido().trim();
         long id = activity.insertComment(requestId, actor.userId(), contenido, now);
-        audit.record("comentarios", id, requestId, "CREAR", null, null, null, actor.userId());
+        audit.record("comentarios", id, requestId, "COMENTAR", null, null, null, actor.userId());
         return new CommentResponse(Ids.str(id), contenido, new PersonResponse(Ids.str(actor.userId()), actor.nombreCompleto()),
                 Times.iso(now));
     }

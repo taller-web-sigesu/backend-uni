@@ -13,6 +13,11 @@ class DashboardCsvWriterTest {
         String csv = new DashboardCsvWriter()
                 .row("a", null, "=SUMA(A1)", "x,y", "di \"hola\"", "@cmd", "-1")
                 .build();
-        assertThat(csv).isEqualTo("a,,'=SUMA(A1),\"x,y\",\"di \"\"hola\"\"\",'@cmd,'-1\r\n");
+        assertThat(csv).isEqualTo("\uFEFFa,,'=SUMA(A1),\"x,y\",\"di \"\"hola\"\"\",'@cmd,'-1\r\n");
+    }
+
+    @Test
+    void empiezaConBomUtf8ParaExcel() {
+        assertThat(new DashboardCsvWriter().row("Soporte informático").build()).startsWith("\uFEFF");
     }
 }

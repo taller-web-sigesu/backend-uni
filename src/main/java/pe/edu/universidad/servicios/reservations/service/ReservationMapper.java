@@ -17,13 +17,15 @@ final class ReservationMapper {
     static ReservationSummaryResponse summary(ReservationRow r, Instant now) {
         return new ReservationSummaryResponse(Ids.str(r.id()), r.codigo(), Ids.str(r.espacioId()), r.espacioNombre(),
                 r.fecha().toString(), Times.hhmm(r.horaInicio()), Times.hhmm(r.horaFin()), r.estado(),
-                ReservationTimePolicy.operationalState(r.estado(), r.fecha(), r.horaInicio(), r.horaFin(), now));
+                ReservationTimePolicy.operationalState(r.estado(), r.fecha(), r.horaInicio(), r.horaFin(), now),
+                r.solicitanteNombre());
     }
 
     static ReservationDetailResponse detail(ReservationRow r, Instant now) {
         return new ReservationDetailResponse(Ids.str(r.id()), r.codigo(), Ids.str(r.espacioId()), r.espacioNombre(),
                 r.fecha().toString(), Times.hhmm(r.horaInicio()), Times.hhmm(r.horaFin()), r.estado(),
                 ReservationTimePolicy.operationalState(r.estado(), r.fecha(), r.horaInicio(), r.horaFin(), now),
-                Ids.str(r.solicitanteId()), r.motivo(), r.numAsistentes(), r.motivoRechazo(), Times.iso(r.creadoEn()));
+                Ids.str(r.solicitanteId()), r.solicitanteNombre(), r.motivo(), r.numAsistentes(), r.motivoRechazo(),
+                Times.iso(r.creadoEn()));
     }
 }

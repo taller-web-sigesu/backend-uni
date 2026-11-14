@@ -2070,6 +2070,8 @@ components:
           type: string
         estadoOperativo:
           type: string
+        solicitante:
+          type: string
     CreateRequestRequest:
       type: object
       properties:
@@ -2107,6 +2109,10 @@ components:
         areaId:
           type: string
         prioridadId:
+          type: string
+        categoria:
+          type: string
+        prioridad:
           type: string
         estado:
           type: string
@@ -2254,6 +2260,8 @@ components:
         rol:
           type: string
         areaId:
+          type: string
+        areaNombre:
           type: string
     LoginRequest:
       type: object
@@ -2628,6 +2636,8 @@ components:
         estadoOperativo:
           type: string
         solicitanteId:
+          type: string
+        solicitante:
           type: string
         motivo:
           type: string
@@ -3007,6 +3017,8 @@ components:
           type: string
         areaId:
           type: string
+        area:
+          type: string
         prioridadId:
           type: string
         prioridad:
@@ -3035,6 +3047,8 @@ components:
           type: string
         cerradaEn:
           type: string
+        encuestaRespondida:
+          type: boolean
     SlaResponse:
       type: object
       properties:
@@ -3136,6 +3150,8 @@ components:
       type: object
       properties:
         id:
+          type: string
+        entidad:
           type: string
         accion:
           type: string
