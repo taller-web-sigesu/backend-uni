@@ -19,7 +19,8 @@ public final class RequestMapper {
 
     public static RequestSummaryResponse summary(RequestRow r) {
         return new RequestSummaryResponse(Ids.str(r.id()), r.codigo(), Ids.str(r.categoriaId()), Ids.str(r.areaId()),
-                Ids.str(r.prioridadId()), r.estadoCodigo(), Times.iso(r.creadoEn()), responsable(r));
+                Ids.str(r.prioridadId()), r.categoriaNombre(), r.prioridadNombre(), r.estadoCodigo(),
+                Times.iso(r.creadoEn()), responsable(r));
     }
 
     public static RequestDetailResponse detail(RequestRow r, Person ultimo, Instant now) {
