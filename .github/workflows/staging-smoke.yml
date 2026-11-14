@@ -45,6 +45,7 @@ jobs:
           STAGING_SUPERVISOR_EMAIL: ${{ secrets.STAGING_SUPERVISOR_EMAIL }}
           STAGING_SUPERVISOR_PASSWORD: ${{ secrets.STAGING_SUPERVISOR_PASSWORD }}
         run: |
+          set -euo pipefail
           if [ -z "$STAGING_STUDENT_EMAIL" ] || [ -z "$STAGING_STUDENT_PASSWORD" ]; then
             echo "Faltan los secretos de la cuenta estudiante de staging."
             exit 1
@@ -61,20 +62,30 @@ jobs:
               --data "{\"correo\":\"$1\",\"contrasena\":\"$2\"}"
           }
 
-          STUDENT_TOKEN=$(login "$STAGING_STUDENT_EMAIL" "$STAGING_STUDENT_PASSWORD" | jq -r '.tokenAcceso')
+          echo "Paso: login estudiante"
+          STUDENT_LOGIN=$(login "$STAGING_STUDENT_EMAIL" "$STAGING_STUDENT_PASSWORD")
+          STUDENT_TOKEN=$(echo "$STUDENT_LOGIN" | jq -r '.tokenAcceso')
           test -n "$STUDENT_TOKEN"
           test "$STUDENT_TOKEN" != "null"
 
-          SUPERVISOR_TOKEN=$(login "$STAGING_SUPERVISOR_EMAIL" "$STAGING_SUPERVISOR_PASSWORD" | jq -r '.tokenAcceso')
+          echo "Paso: login supervisor"
+          SUPERVISOR_LOGIN=$(login "$STAGING_SUPERVISOR_EMAIL" "$STAGING_SUPERVISOR_PASSWORD")
+          SUPERVISOR_TOKEN=$(echo "$SUPERVISOR_LOGIN" | jq -r '.tokenAcceso')
+          SUPERVISOR_AREA=$(echo "$SUPERVISOR_LOGIN" | jq -r '.usuario.areaId')
           test -n "$SUPERVISOR_TOKEN"
           test "$SUPERVISOR_TOKEN" != "null"
+          test -n "$SUPERVISOR_AREA"
+          test "$SUPERVISOR_AREA" != "null"
 
+          echo "Paso: categoria del area del supervisor ($SUPERVISOR_AREA)"
           CATEGORY_ID=$(curl --fail --silent --show-error \
             -H "Authorization: Bearer $STUDENT_TOKEN" \
-            "$BASE_URL/api/v1/catalogs/categories" | jq -r '.items[0].id')
+            "$BASE_URL/api/v1/catalogs/categories" \
+            | jq -r --arg area "$SUPERVISOR_AREA" '[.items[] | select(.areaId == $area)][0].id')
           test -n "$CATEGORY_ID"
           test "$CATEGORY_ID" != "null"
 
+          echo "Paso: crear solicitud"
           STAMP=$(date +%Y%m%d%H%M%S)
           CREATE_CODE=$(curl --silent --show-error --output /tmp/created.json --write-out "%{http_code}" \
             -X POST "$BASE_URL/api/v1/requests" \
@@ -87,11 +98,13 @@ jobs:
           test -n "$REQUEST_ID"
           test "$REQUEST_ID" != "null"
 
+          echo "Paso: leer solicitud $REQUEST_CODE"
           curl --fail --silent --show-error \
             -H "Authorization: Bearer $STUDENT_TOKEN" \
             "$BASE_URL/api/v1/requests/$REQUEST_ID" \
             | jq -e --arg id "$REQUEST_ID" '.id == $id' > /dev/null
 
+          echo "Paso: supervisor ve la solicitud $REQUEST_CODE"
           curl --fail --silent --show-error \
             -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
             "$BASE_URL/api/v1/requests?size=100" \
