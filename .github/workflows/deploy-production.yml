@@ -1,0 +1,59 @@
+name: deploy-production
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy y smoke de produccion
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    env:
+      PROD_BACKEND_URL: https://uniservice-backend-prod.onrender.com
+      PROD_FRONTEND_URL: https://frontend-uni-wx9m.vercel.app
+    steps:
+      - name: Disparar deploy en Render
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_PROD_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "Falta el secreto RENDER_PROD_DEPLOY_HOOK."
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$DEPLOY_HOOK" > /dev/null
+
+      - name: Esperar backend
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl --fail --silent --show-error "$PROD_BACKEND_URL/actuator/health" | grep -q '"status":"UP"'; then
+              echo "Backend UP en el intento $attempt."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "El backend no respondio UP en 15 minutos."
+          exit 1
+
+      - name: Smoke de produccion
+        run: |
+          curl --fail --silent --show-error "$PROD_BACKEND_URL/api/v1/status" | grep -q '"status":"UP"'
+          curl --fail --silent --show-error "$PROD_BACKEND_URL/v3/api-docs" > /dev/null
+          curl --fail --silent --show-error "$PROD_FRONTEND_URL/login" > /dev/null
+
+      - name: Resumen
+        run: |
+          {
+            echo "Produccion desplegada y smoke OK."
+            echo "- Backend: $PROD_BACKEND_URL"
+            echo "- Frontend: $PROD_FRONTEND_URL"
+          } >> "$GITHUB_STEP_SUMMARY"

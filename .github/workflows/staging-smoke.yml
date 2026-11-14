@@ -38,6 +38,65 @@ jobs:
           test "$code" = "200"
           grep -q '"tokenAcceso"' /tmp/login.json
 
+      - name: Flujo real de solicitud
+        env:
+          STAGING_STUDENT_EMAIL: ${{ secrets.STAGING_STUDENT_EMAIL }}
+          STAGING_STUDENT_PASSWORD: ${{ secrets.STAGING_STUDENT_PASSWORD }}
+          STAGING_SUPERVISOR_EMAIL: ${{ secrets.STAGING_SUPERVISOR_EMAIL }}
+          STAGING_SUPERVISOR_PASSWORD: ${{ secrets.STAGING_SUPERVISOR_PASSWORD }}
+        run: |
+          if [ -z "$STAGING_STUDENT_EMAIL" ] || [ -z "$STAGING_STUDENT_PASSWORD" ]; then
+            echo "Faltan los secretos de la cuenta estudiante de staging."
+            exit 1
+          fi
+          if [ -z "$STAGING_SUPERVISOR_EMAIL" ] || [ -z "$STAGING_SUPERVISOR_PASSWORD" ]; then
+            echo "Faltan los secretos de la cuenta supervisora de staging."
+            exit 1
+          fi
+
+          login() {
+            curl --silent --show-error \
+              -X POST "$BASE_URL/api/v1/auth/login" \
+              -H 'Content-Type: application/json' \
+              --data "{\"correo\":\"$1\",\"contrasena\":\"$2\"}"
+          }
+
+          STUDENT_TOKEN=$(login "$STAGING_STUDENT_EMAIL" "$STAGING_STUDENT_PASSWORD" | jq -r '.tokenAcceso')
+          test -n "$STUDENT_TOKEN"
+          test "$STUDENT_TOKEN" != "null"
+
+          SUPERVISOR_TOKEN=$(login "$STAGING_SUPERVISOR_EMAIL" "$STAGING_SUPERVISOR_PASSWORD" | jq -r '.tokenAcceso')
+          test -n "$SUPERVISOR_TOKEN"
+          test "$SUPERVISOR_TOKEN" != "null"
+
+          CATEGORY_ID=$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer $STUDENT_TOKEN" \
+            "$BASE_URL/api/v1/catalogs/categories" | jq -r '.items[0].id')
+          test -n "$CATEGORY_ID"
+          test "$CATEGORY_ID" != "null"
+
+          STAMP=$(date +%Y%m%d%H%M%S)
+          CREATE_CODE=$(curl --silent --show-error --output /tmp/created.json --write-out "%{http_code}" \
+            -X POST "$BASE_URL/api/v1/requests" \
+            -H "Authorization: Bearer $STUDENT_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data "{\"categoriaId\":\"$CATEGORY_ID\",\"ubicacion\":\"Smoke CI $STAMP\",\"descripcion\":\"Solicitud creada por el smoke automatico $STAMP.\"}")
+          test "$CREATE_CODE" = "201"
+          REQUEST_ID=$(jq -r '.id' /tmp/created.json)
+          REQUEST_CODE=$(jq -r '.codigo' /tmp/created.json)
+          test -n "$REQUEST_ID"
+          test "$REQUEST_ID" != "null"
+
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $STUDENT_TOKEN" \
+            "$BASE_URL/api/v1/requests/$REQUEST_ID" \
+            | jq -e --arg id "$REQUEST_ID" '.id == $id' > /dev/null
+
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+            "$BASE_URL/api/v1/requests?size=100" \
+            | jq -e --arg codigo "$REQUEST_CODE" '.items | any(.codigo == $codigo)' > /dev/null
+
       - name: Estado de la API
         run: |
           curl --fail --silent --show-error "$BASE_URL/api/v1/status" | grep -q '"status":"UP"'
