@@ -65,12 +65,12 @@ class RequestLifecycleIT extends IntegrationTest {
         assertThat(created.text("estado")).isEqualTo("NUEVO");
         assertThat(created.text("codigo")).matches("SOL-\\d{4}-\\d{6}");
         assertThat(created.text("areaId")).isEqualTo(String.valueOf(area));
-        assertThat(created.text("area")).startsWith("Área ");
         assertThat(created.text("prioridadId")).isEqualTo("2");
         assertThat(created.header("Location").orElseThrow()).endsWith("/api/v1/requests/" + created.text("id"));
         String id = created.text("id");
 
         Response detail = api.get("/api/v1/requests/" + id, studentToken);
+        assertThat(detail.text("area")).startsWith("Área ");
         assertThat(detail.json().get("sla").get("estado").asString()).isEqualTo("EN_PLAZO");
         assertThat(detail.json().get("sla").get("fechaLimite").asString()).isNotBlank();
 
