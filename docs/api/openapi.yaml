@@ -3151,6 +3151,8 @@ components:
       properties:
         id:
           type: string
+        entidad:
+          type: string
         accion:
           type: string
         campo:
