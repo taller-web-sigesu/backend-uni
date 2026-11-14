@@ -76,7 +76,7 @@ public class RequestQueryService {
     public RequestDetailResponse detail(AuthenticatedActor actor, long id) {
         RequestRow row = access.requireVisible(actor, id);
         Person ultimo = row.esFinal() ? activity.lastTechnician(id).orElse(null) : null;
-        return RequestMapper.detail(row, ultimo, clock.instant());
+        return RequestMapper.detail(row, ultimo, activity.surveyExists(id), clock.instant());
     }
 
     public PageResponse<RequestHistoryResponse> history(AuthenticatedActor actor, long id, PageQuery page) {
