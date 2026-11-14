@@ -1,0 +1,46 @@
+name: staging-smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Health, login y estado
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_URL: https://uniservice-backend-staging.onrender.com
+    steps:
+      - name: Health
+        run: |
+          code=$(curl --silent --show-error --output /tmp/health.json --write-out "%{http_code}" "$BASE_URL/actuator/health")
+          test "$code" = "200"
+          grep -q '"status":"UP"' /tmp/health.json
+
+      - name: Login
+        env:
+          STAGING_EMAIL: ${{ secrets.STAGING_ADMIN_EMAIL }}
+          STAGING_PASSWORD: ${{ secrets.STAGING_ADMIN_PASSWORD }}
+        run: |
+          if [ -z "$STAGING_EMAIL" ] || [ -z "$STAGING_PASSWORD" ]; then
+            echo "Faltan los secretos STAGING_ADMIN_EMAIL y STAGING_ADMIN_PASSWORD."
+            exit 1
+          fi
+          code=$(curl --silent --show-error --output /tmp/login.json --write-out "%{http_code}" \
+            -X POST "$BASE_URL/api/v1/auth/login" \
+            -H 'Content-Type: application/json' \
+            --data "{\"correo\":\"$STAGING_EMAIL\",\"contrasena\":\"$STAGING_PASSWORD\"}")
+          test "$code" = "200"
+          grep -q '"tokenAcceso"' /tmp/login.json
+
+      - name: Estado de la API
+        run: |
+          curl --fail --silent --show-error "$BASE_URL/api/v1/status" | grep -q '"status":"UP"'
+
+      - name: Resumen
+        run: echo "Smoke staging OK: health, login y estado." >> "$GITHUB_STEP_SUMMARY"
