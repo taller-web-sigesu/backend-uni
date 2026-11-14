@@ -111,8 +111,10 @@ class RequestLifecycleIT extends IntegrationTest {
         assertThat(api.get("/api/v1/requests/" + id + "/audit-events", api.token(otherSupervisor)).status()).isEqualTo(404);
         assertThat(api.get("/api/v1/requests/" + id + "/audit-events", studentToken).status()).isEqualTo(403);
 
+        assertThat(api.get("/api/v1/requests/" + id, studentToken).json().get("encuestaRespondida").asBoolean()).isFalse();
         Response survey = api.post("/api/v1/requests/" + id + "/survey", studentToken, Map.of("calificacion", 5, "comentario", "Bien."));
         assertThat(survey.status()).isEqualTo(201);
+        assertThat(api.get("/api/v1/requests/" + id, studentToken).json().get("encuestaRespondida").asBoolean()).isTrue();
         Response duplicated = api.post("/api/v1/requests/" + id + "/survey", studentToken, Map.of("calificacion", 4));
         assertThat(duplicated.status()).isEqualTo(409);
     }

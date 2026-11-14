@@ -34,7 +34,7 @@ public final class RequestDtos {
             String prioridadId, String prioridad, String estado, String estadoNombre, String creadoEn,
             PersonResponse solicitante, String ubicacion, String descripcion, String motivoRechazo,
             PersonResponse responsableActual, PersonResponse ultimoResponsable, SlaResponse sla,
-            String resueltaEn, String cerradaEn) {
+            String resueltaEn, String cerradaEn, boolean encuestaRespondida) {
     }
 
     public record RequestHistoryResponse(String estadoAnterior, String estado, String actorId, String actorNombre,
