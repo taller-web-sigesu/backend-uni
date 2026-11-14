@@ -155,7 +155,7 @@ class RequestLifecycleIT extends IntegrationTest {
         Response list = api.get("/api/v1/requests/" + id + "/comments", supervisorToken);
         assertThat(list.json().get("totalElements").asLong()).isEqualTo(1);
         Response audit = api.get("/api/v1/requests/" + id + "/audit-events", supervisorToken);
-        assertThat(audit.body()).contains("\"accion\":\"COMENTAR\"");
+        assertThat(audit.body()).contains("\"entidad\":\"comentarios\"").contains("\"accion\":\"COMENTAR\"");
     }
 
     @Test

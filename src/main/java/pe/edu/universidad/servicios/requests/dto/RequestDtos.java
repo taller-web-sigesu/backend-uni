@@ -56,7 +56,7 @@ public final class RequestDtos {
     public record SurveyResponse(String id, String solicitudId, int calificacion, String comentario) {
     }
 
-    public record RequestAuditEventResponse(String id, String accion, String campo, String valorAnterior,
-            String valorNuevo, String actorId, String fecha) {
+    public record RequestAuditEventResponse(String id, String entidad, String accion, String campo,
+            String valorAnterior, String valorNuevo, String actorId, String fecha) {
     }
 }
