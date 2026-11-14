@@ -26,7 +26,8 @@ public final class DashboardCsvWriter {
     }
 
     public String build() {
-        return out.toString();
+        // BOM UTF-8: Excel en Windows reconoce los acentos del CSV sin configuración adicional.
+        return '\uFEFF' + out.toString();
     }
 
     static String escape(String raw) {
