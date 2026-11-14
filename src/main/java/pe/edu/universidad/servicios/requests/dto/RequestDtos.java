@@ -31,7 +31,7 @@ public final class RequestDtos {
     }
 
     public record RequestDetailResponse(String id, String codigo, String categoriaId, String categoria, String areaId,
-            String prioridadId, String prioridad, String estado, String estadoNombre, String creadoEn,
+            String area, String prioridadId, String prioridad, String estado, String estadoNombre, String creadoEn,
             PersonResponse solicitante, String ubicacion, String descripcion, String motivoRechazo,
             PersonResponse responsableActual, PersonResponse ultimoResponsable, SlaResponse sla,
             String resueltaEn, String cerradaEn, boolean encuestaRespondida) {

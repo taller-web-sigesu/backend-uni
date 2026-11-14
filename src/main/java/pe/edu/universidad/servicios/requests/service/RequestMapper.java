@@ -26,7 +26,7 @@ public final class RequestMapper {
     public static RequestDetailResponse detail(RequestRow r, Person ultimo, boolean encuestaRespondida, Instant now) {
         String slaStatus = SlaResolutionService.status(r.esFinal(), r.fechaLimiteSla(), r.fechaAvisoSla(), now);
         return new RequestDetailResponse(Ids.str(r.id()), r.codigo(), Ids.str(r.categoriaId()), r.categoriaNombre(),
-                Ids.str(r.areaId()), Ids.str(r.prioridadId()), r.prioridadNombre(), r.estadoCodigo(), r.estadoNombre(),
+                Ids.str(r.areaId()), r.areaNombre(), Ids.str(r.prioridadId()), r.prioridadNombre(), r.estadoCodigo(), r.estadoNombre(),
                 Times.iso(r.creadoEn()), new PersonResponse(Ids.str(r.solicitanteId()), r.solicitanteNombre()),
                 r.ubicacion(), r.descripcion(), r.motivoRechazo(), responsable(r),
                 ultimo == null ? null : new PersonResponse(Ids.str(ultimo.id()), ultimo.nombreCompleto()),
