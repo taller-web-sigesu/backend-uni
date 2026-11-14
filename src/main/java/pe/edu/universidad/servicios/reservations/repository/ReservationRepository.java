@@ -25,10 +25,12 @@ public class ReservationRepository {
 
     private static final String SELECT = """
             SELECT r.id, r.codigo, r.espacio_id, esp.nombre AS espacio_nombre, esp.area_id AS espacio_area_id,
-                   r.solicitante_id, er.codigo AS estado, r.fecha, r.hora_inicio, r.hora_fin, r.motivo, r.num_asistentes,
-                   r.motivo_rechazo, r.aprobada_por_id, r.cancelada_por_id, r.version_fila, r.creado_en
+                   r.solicitante_id, sol.nombre_completo AS solicitante_nombre, er.codigo AS estado, r.fecha,
+                   r.hora_inicio, r.hora_fin, r.motivo, r.num_asistentes, r.motivo_rechazo, r.aprobada_por_id,
+                   r.cancelada_por_id, r.version_fila, r.creado_en
             FROM reservas r
             JOIN espacios esp ON esp.id = r.espacio_id
+            JOIN usuarios sol ON sol.id = r.solicitante_id
             JOIN estados_reserva er ON er.id = r.estado_id
             """;
 
@@ -39,9 +41,9 @@ public class ReservationRepository {
     }
 
     public record ReservationRow(long id, String codigo, long espacioId, String espacioNombre, Long espacioAreaId,
-            long solicitanteId, String estado, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin, String motivo,
-            Integer numAsistentes, String motivoRechazo, Long aprobadaPorId, Long canceladaPorId, int version,
-            Instant creadoEn) {
+            long solicitanteId, String solicitanteNombre, String estado, LocalDate fecha, LocalTime horaInicio,
+            LocalTime horaFin, String motivo, Integer numAsistentes, String motivoRechazo, Long aprobadaPorId,
+            Long canceladaPorId, int version, Instant creadoEn) {
     }
 
     public record TimeRange(LocalTime inicio, LocalTime fin) {
@@ -218,7 +220,8 @@ public class ReservationRepository {
     static ReservationRow map(ResultSet rs, int n) throws SQLException {
         return new ReservationRow(rs.getLong("id"), rs.getString("codigo"), rs.getLong("espacio_id"),
                 rs.getString("espacio_nombre"), Db.nullableLong(rs, "espacio_area_id"), rs.getLong("solicitante_id"),
-                rs.getString("estado"), Db.date(rs, "fecha"), Db.time(rs, "hora_inicio"), Db.time(rs, "hora_fin"),
+                rs.getString("solicitante_nombre"), rs.getString("estado"), Db.date(rs, "fecha"),
+                Db.time(rs, "hora_inicio"), Db.time(rs, "hora_fin"),
                 rs.getString("motivo"), Db.nullableInt(rs, "num_asistentes"), rs.getString("motivo_rechazo"),
                 Db.nullableLong(rs, "aprobada_por_id"), Db.nullableLong(rs, "cancelada_por_id"), rs.getInt("version_fila"),
                 Db.instant(rs, "creado_en"));

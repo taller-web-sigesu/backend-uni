@@ -54,12 +54,12 @@ public final class ReservationDtos {
     }
 
     public record ReservationSummaryResponse(String id, String codigo, String espacioId, String espacio, String fecha,
-            String horaInicio, String horaFin, String estado, String estadoOperativo) {
+            String horaInicio, String horaFin, String estado, String estadoOperativo, String solicitante) {
     }
 
     public record ReservationDetailResponse(String id, String codigo, String espacioId, String espacio, String fecha,
-            String horaInicio, String horaFin, String estado, String estadoOperativo, String solicitanteId, String motivo,
-            Integer numAsistentes, String motivoRechazo, String creadoEn) {
+            String horaInicio, String horaFin, String estado, String estadoOperativo, String solicitanteId,
+            String solicitante, String motivo, Integer numAsistentes, String motivoRechazo, String creadoEn) {
     }
 
     public record ReservationHistoryResponse(String estadoAnterior, String estado, String actorId, String fecha, String motivo) {
