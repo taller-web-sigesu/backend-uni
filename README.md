@@ -7,6 +7,39 @@ API REST en Java 21 + Spring Boot 4.1.2 sobre MySQL 8.4. Implementa HU-01 a HU-2
 - Seguridad y permisos: [`docs/SECURITY.md`](docs/SECURITY.md). Base de datos: [`docs/DATABASE.md`](docs/DATABASE.md).
 - Diseño: [API por negocio](docs/API-DISENIO.md), [diseño del backend](docs/BACKEND-DISENIO.md) y [planes por fase](docs/plan/).
 
+## Despliegues
+
+Hay **dos despliegues separados**:
+
+| Entorno | Backend | Swagger | Rama | Base de datos |
+| --- | --- | --- | --- | --- |
+| Staging | https://uniservice-backend-staging.onrender.com | https://uniservice-backend-staging.onrender.com/swagger-ui.html | `main` | MySQL en Railway |
+| Producción | https://uniservice-backend-prod.onrender.com | https://uniservice-backend-prod.onrender.com/swagger-ui.html | `production` | MySQL en Railway (instancia distinta) |
+
+- **Staging:** Render despliega automáticamente al actualizar `main` y carga las cuentas demo (`APP_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/demo`).
+- **Producción:** Render tiene `Auto-Deploy: Off`. El workflow `deploy-production.yml` exige aprobación del environment `production`, llama al Deploy Hook, espera `health = UP` y ejecuta el smoke. Solo aplica migraciones, sin datos demo.
+- **Frontends:** staging usa https://frontend-uni-tdk7.vercel.app y producción https://frontend-uni-wx9m.vercel.app; cada uno hace proxy `/api` a su backend.
+
+### Usuarios de prueba (staging)
+
+Todas las cuentas usan la contraseña **`Demo2026!`**:
+
+| Correo | Rol | Área |
+| --- | --- | --- |
+| `admin.demo@universidad.example` | Administrador | — |
+| `supervisor.ti.demo@universidad.example` | Supervisor | TI (1) |
+| `supervisor.mant.demo@universidad.example` | Supervisor | Mantenimiento (2) |
+| `supervisor.bib.demo@universidad.example` | Supervisor | Biblioteca (4) |
+| `tecnico.ti.demo@universidad.example` | Técnico | TI (1) |
+| `tecnica.ti.demo@universidad.example` | Técnica | TI (1) |
+| `tecnico.mant.demo@universidad.example` | Técnico | Mantenimiento (2) |
+| `ana.demo@universidad.example` | Estudiante | — |
+| `pedro.demo@universidad.example` | Docente | — |
+
+Producción no carga cuentas demo. Su administrador inicial es `admin@uniservice.app`; la contraseña se entrega por el canal privado y el sistema obliga a cambiarla en el primer ingreso.
+
+El informe completo de Fase III está en [infra-uni/docs/fase-3/INFORME-FASE-III.md](https://github.com/taller-web-sigesu/infra-uni/blob/main/docs/fase-3/INFORME-FASE-III.md).
+
 ## Variables de entorno
 
 | Variable | Uso | Valor local por defecto |

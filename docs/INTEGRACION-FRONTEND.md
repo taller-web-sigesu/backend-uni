@@ -12,6 +12,15 @@ Si ejecuta `npm run dev` fuera de Docker, el nombre `backend` no se resuelve: el
 
 El backend acepta por defecto los orígenes `http://localhost:3000` y `http://127.0.0.1:3000` (`APP_ALLOWED_ORIGINS`, separados por comas). Cualquier otro origen recibe `403` en las operaciones con cookie y en el preflight CORS.
 
+## Staging
+
+- **Frontend:** https://frontend-uni-tdk7.vercel.app
+- **Backend:** https://uniservice-backend-staging.onrender.com
+- **Swagger:** https://uniservice-backend-staging.onrender.com/swagger-ui.html
+- **OpenAPI:** https://uniservice-backend-staging.onrender.com/v3/api-docs
+
+Staging usa las mismas cuentas de demostración que el entorno local y carga `classpath:db/demo`. El frontend hace proxy `/api` al backend de staging, así que la cookie de sesión queda en el mismo origen. Producción no carga datos demo y usa una base MySQL separada.
+
 ## Cuentas de demostración
 
 Todas usan la contraseña `Demo2026!`, están activas y no exigen cambio de contraseña.

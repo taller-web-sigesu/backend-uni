@@ -4,7 +4,7 @@
 
 [Convenciones de API](../API-DISENIO.md#convenciones-del-contrato) · [Diseño del backend](../BACKEND-DISENIO.md)
 
-Ambas rutas figuran en el esqueleto actual. El objetivo de seguridad restringe Actuator a la red interna o a usuarios de operación autorizados.
+Ambas rutas están implementadas. `/actuator/health` es público y devuelve solo el estado agregado (`UP`); el detalle de componentes queda restringido. Swagger y `/v3/api-docs` están publicados para la evaluación y deben restringirse si el sistema pasa a operación real.
 
 ## `GET /status`
 
