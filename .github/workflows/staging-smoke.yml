@@ -43,4 +43,5 @@ jobs:
           curl --fail --silent --show-error "$BASE_URL/api/v1/status" | grep -q '"status":"UP"'
 
       - name: Resumen
-        run: echo "Smoke staging OK: health, login y estado." >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Smoke staging OK: health, login y estado." >> "$GITHUB_STEP_SUMMARY"
