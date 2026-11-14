@@ -140,7 +140,7 @@ class SlaAndDashboardIT extends IntegrationTest {
         assertThat(csv.header("Content-Type").orElse("")).startsWith("text/csv");
         assertThat(csv.header("Content-Disposition").orElse("")).contains("solicitudes.csv");
         assertThat(csv.body().split("\r\n")).hasSize(3);
-        assertThat(csv.body().split("\r\n")[0]).isEqualTo("codigo,categoria,area,estado,prioridad,responsable,creadoEn");
+        assertThat(csv.body().split("\r\n")[0]).isEqualTo("\uFEFFcodigo,categoria,area,estado,prioridad,responsable,creadoEn");
 
         Response indicators = api.get("/api/v1/dashboard/reports?tipo=indicadores&" + query, supervisorToken);
         assertThat(indicators.body()).contains("registradas,,1").contains("atendidas,,1");
@@ -152,6 +152,6 @@ class SlaAndDashboardIT extends IntegrationTest {
         String query = "fechaDesde=2001-01-01T00:00:00Z&fechaHasta=2001-01-02T00:00:00Z";
         Response csv = api.get("/api/v1/dashboard/reports?tipo=solicitudes&" + query, api.token(supervisor));
         assertThat(csv.status()).isEqualTo(200);
-        assertThat(csv.body()).isEqualTo("codigo,categoria,area,estado,prioridad,responsable,creadoEn\r\n");
+        assertThat(csv.body()).isEqualTo("\uFEFFcodigo,categoria,area,estado,prioridad,responsable,creadoEn\r\n");
     }
 }
