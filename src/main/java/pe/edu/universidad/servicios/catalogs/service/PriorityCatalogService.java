@@ -42,9 +42,13 @@ public class PriorityCatalogService {
         return priorities.findById(id).filter(Priority::activo);
     }
 
+    /**
+     * Catálogo de solo lectura para los filtros, los nombres visibles y el ajuste
+     * de prioridad del supervisor (HU-07 y HU-08). El alta y la edición siguen
+     * reservadas al administrador.
+     */
     @Transactional(readOnly = true)
     public PageResponse<PriorityResponse> list(AuthenticatedActor actor, PageQuery page) {
-        actor.requireRole(RoleCode.ADMINISTRADOR);
         return new PageResponse<>(priorities.page(page).stream().map(PriorityCatalogService::toResponse).toList(),
                 page.page(), page.size(), priorities.count());
     }

@@ -267,12 +267,12 @@ Content-Type: application/json
 
 ## `GET /admin/catalogs/priorities`
 
-Lista prioridades para administración.
+Lista prioridades para administración y para el catálogo de solo lectura del resto de roles.
 
-- **Seguridad.** JWT de administrador.
+- **Seguridad.** JWT de cualquier rol autenticado. El alta y la edición siguen siendo exclusivas del administrador.
 - **Entrada.** `page` y `size` opcionales. Sin cuerpo.
 - **Salida.** Página con registros activos e inactivos.
-- **Errores.** `400` por paginación inválida y `403` para otro rol.
+- **Errores.** `400` por paginación inválida y `401` sin JWT.
 
 **Petición de ejemplo**
 
