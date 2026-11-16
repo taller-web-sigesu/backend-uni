@@ -91,7 +91,7 @@ class AdminCatalogIT extends IntegrationTest {
     }
 
     @Test
-    void prioridadesActivasDisponiblesParaRolesAutenticados() {
+    void catalogoDePrioridadesDisponibleParaRolesAutenticados() {
         String code = "P_CAT_" + suffix();
         Response created = null;
         // Los niveles 1-4 son semilla; se busca uno libre entre 5 y 10 para no chocar con otras pruebas.
@@ -114,11 +114,13 @@ class AdminCatalogIT extends IntegrationTest {
         Response supervisorCatalog = api.get("/api/v1/admin/catalogs/priorities?size=100", supervisor);
         assertThat(supervisorCatalog.status()).as(supervisorCatalog.toString()).isEqualTo(200);
         assertThat(supervisorCatalog.body()).contains("\"codigo\":\"ALTA\"");
-        assertThat(supervisorCatalog.body()).doesNotContain(code);
+        // El endpoint administrativo devuelve activas e inactivas; el frontend filtra las activas.
+        assertThat(supervisorCatalog.body()).contains("\"codigo\":\"" + code + "\"", "\"activo\":false");
 
         Response studentCatalog = api.get("/api/v1/admin/catalogs/priorities?size=100", student);
         assertThat(studentCatalog.status()).as(studentCatalog.toString()).isEqualTo(200);
         assertThat(studentCatalog.body()).contains("\"codigo\":\"ALTA\"");
+        assertThat(studentCatalog.body()).contains("\"codigo\":\"" + code + "\"");
 
         // La lectura se abre a todos los roles autenticados; la escritura sigue siendo solo del administrador.
         assertThat(api.post("/api/v1/admin/catalogs/priorities", student,
