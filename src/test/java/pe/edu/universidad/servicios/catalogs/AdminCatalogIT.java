@@ -60,7 +60,7 @@ class AdminCatalogIT extends IntegrationTest {
     void rutasAdministrativasDeneganOtrosRoles() {
         String student = api.token(data.user("ESTUDIANTE", null));
         for (String path : new String[] { "/api/v1/admin/users", "/api/v1/admin/roles", "/api/v1/admin/catalogs/areas",
-                "/api/v1/admin/catalogs/categories", "/api/v1/admin/catalogs/priorities", "/api/v1/admin/catalogs/request-statuses",
+                "/api/v1/admin/catalogs/categories", "/api/v1/admin/catalogs/request-statuses",
                 "/api/v1/admin/sla-policies", "/api/v1/admin/spaces", "/api/v1/admin/space-types", "/api/v1/admin/reservation-policy" }) {
             assertThat(api.get(path, student).status()).as(path).isEqualTo(403);
         }
@@ -88,6 +88,45 @@ class AdminCatalogIT extends IntegrationTest {
         assertThat(api.patch("/api/v1/admin/catalogs/categories/" + created.text("id"), adminToken, Map.of("activo", false)).status())
                 .isEqualTo(200);
         assertThat(api.get("/api/v1/catalogs/categories?size=100", student).body()).doesNotContain("\"id\":\"" + created.text("id") + "\"");
+    }
+
+    @Test
+    void prioridadesActivasDisponiblesParaRolesAutenticados() {
+        String code = "P_CAT_" + suffix();
+        Response created = null;
+        // Los niveles 1-4 son semilla; se busca uno libre entre 5 y 10 para no chocar con otras pruebas.
+        for (int level = 10; level >= 5; level--) {
+            Response attempt = api.post("/api/v1/admin/catalogs/priorities", adminToken,
+                    Map.of("codigo", code, "nombre", "Prioridad catálogo " + code, "nivel", level));
+            if (attempt.status() == 201) {
+                created = attempt;
+                break;
+            }
+            assertThat(attempt.status()).as(attempt.toString()).isEqualTo(409);
+        }
+        assertThat(created).as("no se encontró un nivel libre para la prioridad de prueba").isNotNull();
+        assertThat(api.patch("/api/v1/admin/catalogs/priorities/" + created.text("id"), adminToken,
+                Map.of("activo", false)).status()).isEqualTo(200);
+
+        String supervisor = api.token(data.user("SUPERVISOR", data.area()));
+        String student = api.token(data.user("ESTUDIANTE", null));
+
+        Response supervisorCatalog = api.get("/api/v1/admin/catalogs/priorities?size=100", supervisor);
+        assertThat(supervisorCatalog.status()).as(supervisorCatalog.toString()).isEqualTo(200);
+        assertThat(supervisorCatalog.body()).contains("\"codigo\":\"ALTA\"");
+        assertThat(supervisorCatalog.body()).doesNotContain(code);
+
+        Response studentCatalog = api.get("/api/v1/admin/catalogs/priorities?size=100", student);
+        assertThat(studentCatalog.status()).as(studentCatalog.toString()).isEqualTo(200);
+        assertThat(studentCatalog.body()).contains("\"codigo\":\"ALTA\"");
+
+        // La lectura se abre a todos los roles autenticados; la escritura sigue siendo solo del administrador.
+        assertThat(api.post("/api/v1/admin/catalogs/priorities", student,
+                Map.of("codigo", "P_DENY_" + suffix(), "nombre", "No permitida", "nivel", 1)).status()).isEqualTo(403);
+        assertThat(api.get("/api/v1/admin/catalogs/priorities?size=100", null).status()).isEqualTo(401);
+
+        // Limpieza: libera el nivel para que la prueba sea repetible en la misma base.
+        data.jdbc().sql("DELETE FROM prioridades WHERE codigo = :codigo").param("codigo", code).update();
     }
 
     @Test

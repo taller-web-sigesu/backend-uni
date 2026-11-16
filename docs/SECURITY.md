@@ -56,7 +56,8 @@ Leyenda: **E** estudiante, **D** docente, **T** técnico, **S** supervisor, **A*
 | `GET /dashboard/summary`, `/reports` | S, A | S: su área (otra área 403). A: un área o todas. |
 | `GET/POST/PATCH /admin/users`, `GET /admin/users/pending`, `PATCH /admin/users/{id}/account-status`, `POST /admin/users/{id}/password-reset`, `GET /admin/roles` | A | No puede cambiar su propio rol ni desactivarse (403). T/S requieren área activa. |
 | `GET /catalogs/categories` | Todos | Solo categorías habilitadas. |
-| `/admin/catalogs/*`, `/admin/sla-policies` | A | Códigos estables (400 al editarlos); bajas lógicas con control de dependencias activas (409). |
+| `GET /admin/catalogs/priorities` | Todos | Solo lectura; alimenta filtros, nombres visibles y el ajuste de prioridad del supervisor (HU-07 y HU-08). El alta y la edición siguen siendo de A. |
+| `POST/PATCH /admin/catalogs/*`, `/admin/sla-policies` | A | Códigos estables (400 al editarlos); bajas lógicas con control de dependencias activas (409). |
 | `GET /spaces`, `GET /spaces/{id}/availability`, `POST /reservations` | Todos | Espacio y tipo activos (404). |
 | `GET /reservations` | Todos | `vista=propias` (defecto). `vista=gestion`: S de su área o A, solo pendientes; otros 403. |
 | `GET /reservations/{id}`, `/history` | Todos | Propietario, supervisor del área del espacio o A. Espacio sin área: solo A gestiona. |
