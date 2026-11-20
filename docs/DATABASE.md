@@ -9,8 +9,11 @@
 | `V1__esquema_inicial.sql` | 26 tablas, 5 vistas, claves, checks e índices del Anexo A con los ajustes reconciliados de abajo. Sin `CREATE DATABASE` ni `USE`. |
 | `V2__catalogos_semilla.sql` | Roles, áreas, prioridades, estados y transiciones, categorías, políticas SLA, tipos y estados de reserva, espacios piloto con horario y política de reservas. |
 | `db/demo/V1000__datos_demostracion.sql` | Cuentas ficticias (contraseña `Demo2026!`). Solo se aplica con `APP_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/demo`. |
+| `R__consolidar_sesiones_vigentes.sql` | Migración repetible. Conserva la sesión vigente más reciente por cuenta y revoca las demás. Desempata por ID. Se ejecuta después de las migraciones versionadas, incluidos los datos demo si están habilitados. |
 
 JPA no crea tablas (`spring-boot-starter-jdbc`, sin Hibernate). Una base vacía se migra al arrancar y un segundo arranque no reaplica nada (verificado por `scripts/smoke-image.sh`).
+
+Para aplicar la política de sesión única durante un despliegue con varias instancias, retira del tráfico de inicio de sesión las instancias de la versión anterior antes de ejecutar la consolidación. Así se evita que la versión antigua emita varias sesiones activas después de la migración.
 
 ## Ajustes respecto del Anexo A
 
