@@ -30,10 +30,12 @@ Todas usan la contraseña `Demo2026!`, están activas y no exigen cambio de cont
 | `admin.demo@universidad.example` | ADMINISTRADOR | — |
 | `supervisor.ti.demo@universidad.example` | SUPERVISOR | TI (1) |
 | `supervisor.mant.demo@universidad.example` | SUPERVISOR | Mantenimiento (2) |
+| `supervisor.sg.demo@universidad.example` | SUPERVISOR | Servicios generales (3) |
 | `supervisor.bib.demo@universidad.example` | SUPERVISOR | Biblioteca (4) |
 | `tecnico.ti.demo@universidad.example` | TECNICO | TI (1) |
 | `tecnica.ti.demo@universidad.example` | TECNICO | TI (1) |
 | `tecnico.mant.demo@universidad.example` | TECNICO | Mantenimiento (2) |
+| `tecnico.sg.demo@universidad.example` | TECNICO | Servicios generales (3) |
 | `ana.demo@universidad.example` | ESTUDIANTE | — |
 | `pedro.demo@universidad.example` | DOCENTE | — |
 
