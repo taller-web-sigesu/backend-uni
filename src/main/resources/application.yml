@@ -31,13 +31,42 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: never
   observations:
     key-values:
       application: backend-uni
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 2s
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    sampling:
+      probability: ${APP_TRACING_SAMPLE_RATE:0.1}
+    propagation:
+      type: w3c
+    baggage:
+      enabled: false
+    export:
+      otlp:
+        enabled: ${APP_OTLP_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${APP_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
 
 springdoc:
   api-docs:
@@ -47,10 +76,18 @@ springdoc:
   paths-to-match: /api/v1/**
 
 logging:
-  pattern:
-    correlation: "[cid:%X{correlationId:-}] "
+  structured:
+    format:
+      console: logstash
+    json:
+      exclude: stack_trace
+      rename:
+        "[@timestamp]": timestamp
+        logger_name: logger
 
 app:
+  telemetry:
+    password-hash: ${APP_TELEMETRY_PASSWORD_HASH:}
   security:
     # Solo para desarrollo local. En CI y despliegues se define APP_JWT_SECRET (mínimo 32 caracteres).
     jwt-secret: ${APP_JWT_SECRET:gestal-local-dev-secret-cambiar-en-despliegue-2026}

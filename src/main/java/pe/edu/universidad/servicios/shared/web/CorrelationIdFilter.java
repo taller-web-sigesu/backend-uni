@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,6 +21,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
     public static final String HEADER = "X-Correlation-ID";
     public static final String MDC_KEY = "correlationId";
+    private static final Logger log = LoggerFactory.getLogger(CorrelationIdFilter.class);
     private static final Pattern VALID = Pattern.compile("[A-Za-z0-9._-]{1,36}");
 
     @Override
@@ -33,6 +36,9 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         response.setHeader(HEADER, correlationId);
         try {
             chain.doFilter(request, response);
+            if (request.getServletPath().startsWith("/api/")) {
+                log.atInfo().addKeyValue("status", response.getStatus()).log("Petición HTTP completada");
+            }
         } finally {
             MDC.remove(MDC_KEY);
         }

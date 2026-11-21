@@ -137,7 +137,7 @@ public class AttachmentService {
         try {
             storage.delete(key);
         } catch (RuntimeException ex) {
-            log.error("No se pudo borrar el objeto de evidencia {}: {}", key, ex.getClass().getSimpleName());
+            log.error("No se pudo borrar el objeto de evidencia: {}", ex.getClass().getSimpleName());
         }
     }
 

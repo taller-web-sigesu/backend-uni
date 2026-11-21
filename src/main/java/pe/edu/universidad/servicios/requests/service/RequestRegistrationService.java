@@ -19,6 +19,7 @@ import pe.edu.universidad.servicios.requests.repository.ServiceRequestRepository
 import pe.edu.universidad.servicios.shared.error.ApiException;
 import pe.edu.universidad.servicios.shared.security.AuthenticatedActor;
 import pe.edu.universidad.servicios.shared.security.RoleCode;
+import pe.edu.universidad.servicios.shared.telemetry.BusinessMetrics;
 import pe.edu.universidad.servicios.shared.web.Ids;
 import pe.edu.universidad.servicios.sla.service.SlaResolutionService;
 import pe.edu.universidad.servicios.sla.service.SlaResolutionService.SlaDeadline;
@@ -36,10 +37,11 @@ public class RequestRegistrationService {
     private final SlaResolutionService sla;
     private final AuditEventService audit;
     private final Clock clock;
+    private final BusinessMetrics metrics;
 
     public RequestRegistrationService(ServiceRequestRepository requests, RequestActivityRepository activity,
             CategoryCatalogService categories, RequestStatusCatalogService statuses, SlaResolutionService sla,
-            AuditEventService audit, Clock clock) {
+            AuditEventService audit, Clock clock, BusinessMetrics metrics) {
         this.requests = requests;
         this.activity = activity;
         this.categories = categories;
@@ -47,6 +49,7 @@ public class RequestRegistrationService {
         this.sla = sla;
         this.audit = audit;
         this.clock = clock;
+        this.metrics = metrics;
     }
 
     @Transactional
@@ -66,6 +69,7 @@ public class RequestRegistrationService {
                 deadline.map(SlaDeadline::fechaLimite).orElse(null), deadline.map(SlaDeadline::fechaAviso).orElse(null), now);
         activity.insertHistory(id, null, estadoNuevo, actor.userId(), null, now);
         audit.record("solicitudes", id, id, "CREAR", "estado", null, "NUEVO", actor.userId());
+        metrics.requestCreated();
         return RequestMapper.summary(requests.findById(id).orElseThrow());
     }
 }

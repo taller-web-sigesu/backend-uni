@@ -139,7 +139,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {
-        log.error("Error no controlado", ex);
+        log.error("Error no controlado: {}", ex.getClass().getSimpleName());
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_INTERNO", "Ocurrió un error inesperado.", List.of());
     }
 
