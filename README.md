@@ -29,10 +29,12 @@ Todas las cuentas usan la contraseña **`Demo2026!`**:
 | `admin.demo@universidad.example` | Administrador | — |
 | `supervisor.ti.demo@universidad.example` | Supervisor | TI (1) |
 | `supervisor.mant.demo@universidad.example` | Supervisor | Mantenimiento (2) |
+| `supervisor.sg.demo@universidad.example` | Supervisor | Servicios generales (3) |
 | `supervisor.bib.demo@universidad.example` | Supervisor | Biblioteca (4) |
 | `tecnico.ti.demo@universidad.example` | Técnico | TI (1) |
 | `tecnica.ti.demo@universidad.example` | Técnica | TI (1) |
 | `tecnico.mant.demo@universidad.example` | Técnico | Mantenimiento (2) |
+| `tecnico.sg.demo@universidad.example` | Técnico | Servicios generales (3) |
 | `ana.demo@universidad.example` | Estudiante | — |
 | `pedro.demo@universidad.example` | Docente | — |
 
