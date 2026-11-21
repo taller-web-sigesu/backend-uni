@@ -1,0 +1,57 @@
+name: gestal-observabilidad
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.path=/prometheus, --storage.tsdb.retention.time=15d]
+    ports: ["127.0.0.1:9090:9090"]
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    secrets: [gestal_scrape_password]
+    networks: [default, backend]
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.27.0
+    command: [--config.file=/etc/blackbox.yml]
+    volumes: [./blackbox.yml:/etc/blackbox.yml:ro]
+    networks: [default, backend]
+
+  deploy:
+    image: python:3.13.7-alpine
+    command: [python, /opt/deploy_exporter.py]
+    volumes: [./deploy_exporter.py:/opt/deploy_exporter.py:ro]
+    read_only: true
+    user: "65534:65534"
+
+  tempo:
+    image: grafana/tempo:2.8.2
+    command: [-config.file=/etc/tempo.yml]
+    volumes:
+      - ./tempo.yml:/etc/tempo.yml:ro
+      - tempo-data:/var/tempo
+    networks: [default, backend]
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    ports: ["127.0.0.1:3001:3000"]
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+networks:
+  backend:
+    external: true
+    name: ${GESTAL_OBSERVABILITY_NETWORK:-universidad-sm_app_net}
+
+volumes:
+  prometheus-data:
+  tempo-data:
+
+secrets:
+  gestal_scrape_password:
+    file: ${GESTAL_SCRAPE_PASSWORD_FILE:?define la ruta del archivo de contraseña local}

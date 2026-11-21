@@ -1,0 +1,138 @@
+rule_files: [gestal.rules.yml]
+evaluation_interval: 1m
+tests:
+  - name: Las seis alertas disparan y se recuperan
+    interval: 1m
+    input_series:
+      - series: 'probe_success{job="gestal-health"}'
+        values: '0x11 1x14'
+      - series: 'up{job="gestal-health"}'
+        values: '1x26'
+      - series: 'http_server_requests_seconds_count{job="gestal-backend",uri="/api/v1/status",status="200"}'
+        values: '0+98x11 1178+100x14'
+      - series: 'http_server_requests_seconds_count{job="gestal-backend",uri="/api/v1/status",status="500"}'
+        values: '0+2x11 22x14'
+      - series: 'http_server_requests_seconds_bucket{job="gestal-backend",uri="/api/v1/status",le="1"}'
+        values: '0+60x11 760+100x14'
+      - series: 'http_server_requests_seconds_bucket{job="gestal-backend",uri="/api/v1/status",le="2"}'
+        values: '0+80x11 980+100x14'
+      - series: 'http_server_requests_seconds_bucket{job="gestal-backend",uri="/api/v1/status",le="4"}'
+        values: '0+100x26'
+      - series: 'http_server_requests_seconds_bucket{job="gestal-backend",uri="/api/v1/status",le="+Inf"}'
+        values: '0+100x26'
+      - series: 'hikaricp_connections_active{job="gestal-backend",pool="HikariPool-1"}'
+        values: '9x11 8x14'
+      - series: 'hikaricp_connections_max{job="gestal-backend",pool="HikariPool-1"}'
+        values: '10x26'
+      - series: 'up{job="gestal-deploy"}'
+        values: '1x26'
+      - series: 'gestal_deployment_workflow_failed{job="gestal-deploy"}'
+        values: '1x11 0x14'
+      - series: 'gestal_auth_login_rejections_total{job="gestal-backend",reason="invalid_credentials"}'
+        values: '0+4x11 44x14'
+      - series: 'gestal_auth_login_rejections_total{job="gestal-backend",reason="rate_limited"}'
+        values: '0+2x11 22x14'
+    alert_rule_test:
+      - eval_time: 0m
+        alertname: GestalHealthUnavailable
+        exp_alerts: []
+      - eval_time: 0m
+        alertname: GestalHttp5xxHigh
+        exp_alerts: []
+      - eval_time: 0m
+        alertname: GestalHttpP95High
+        exp_alerts: []
+      - eval_time: 0m
+        alertname: GestalPoolSaturated
+        exp_alerts: []
+      - eval_time: 0m
+        alertname: GestalDeploymentFailed
+        exp_alerts: []
+      - eval_time: 0m
+        alertname: GestalLoginRejectionsHigh
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: GestalHealthUnavailable
+        exp_alerts:
+          - exp_labels: {severity: critical, job: gestal-health}
+            exp_annotations:
+              summary: Health de Gestal caído o sin sonda
+      - eval_time: 10m
+        alertname: GestalHttp5xxHigh
+        exp_alerts:
+          - exp_labels: {severity: critical}
+            exp_annotations:
+              summary: Más de 1% de 5xx en la API
+      - eval_time: 10m
+        alertname: GestalHttpP95High
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: Latencia p95 de la API superior a 2 s
+      - eval_time: 10m
+        alertname: GestalPoolSaturated
+        exp_alerts:
+          - exp_labels: {severity: warning, job: gestal-backend, pool: HikariPool-1}
+            exp_annotations:
+              summary: Más de 80% del pool Hikari en uso
+      - eval_time: 10m
+        alertname: GestalDeploymentFailed
+        exp_alerts:
+          - exp_labels: {severity: critical, job: gestal-deploy}
+            exp_annotations:
+              summary: Falló la última ejecución completada de deploy-production
+      - eval_time: 10m
+        alertname: GestalLoginRejectionsHigh
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: Al menos 20 intentos de login rechazados en 5 min
+      - eval_time: 22m
+        alertname: GestalHealthUnavailable
+        exp_alerts: []
+      - eval_time: 22m
+        alertname: GestalHttp5xxHigh
+        exp_alerts: []
+      - eval_time: 22m
+        alertname: GestalHttpP95High
+        exp_alerts: []
+      - eval_time: 22m
+        alertname: GestalPoolSaturated
+        exp_alerts: []
+      - eval_time: 22m
+        alertname: GestalDeploymentFailed
+        exp_alerts: []
+      - eval_time: 22m
+        alertname: GestalLoginRejectionsHigh
+        exp_alerts: []
+  - name: Sonda ausente, telemetría parcial y workflow inaccesible
+    interval: 1m
+    input_series:
+      - series: 'up{job="gestal-deploy"}'
+        values: '0x12'
+      - series: 'gestal_deployment_workflow_failed{job="gestal-deploy"}'
+        values: '1x12'
+      - series: 'http_server_requests_seconds_count{job="gestal-backend",uri="/api/v1/status",status="200"}'
+        values: '0x12'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: GestalHealthUnavailable
+        exp_alerts:
+          - exp_labels: {severity: critical, job: gestal-health}
+            exp_annotations:
+              summary: Health de Gestal caído o sin sonda
+      - eval_time: 10m
+        alertname: GestalHttp5xxHigh
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: GestalHttpP95High
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: GestalPoolSaturated
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: GestalDeploymentFailed
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: GestalLoginRejectionsHigh
+        exp_alerts: []

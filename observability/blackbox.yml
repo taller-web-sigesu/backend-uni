@@ -1,0 +1,10 @@
+modules:
+  gestal_health:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      valid_status_codes: [200]
+      follow_redirects: false
+      fail_if_body_not_matches_regexp:
+        - '"status"\s*:\s*"UP"'
