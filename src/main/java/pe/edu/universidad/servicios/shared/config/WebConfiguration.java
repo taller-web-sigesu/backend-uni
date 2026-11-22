@@ -22,11 +22,11 @@ public class WebConfiguration implements WebMvcConfigurer {
         resolvers.add(new CurrentActorArgumentResolver());
     }
 
-    /** Se registra antes de la cadena de seguridad para que también los 401 lleven correlación. */
+    /** Dentro de la observación HTTP y antes de seguridad, para correlacionar también los 401. */
     @Bean
     FilterRegistrationBean<CorrelationIdFilter> correlationIdFilter() {
         FilterRegistrationBean<CorrelationIdFilter> registration = new FilterRegistrationBean<>(new CorrelationIdFilter());
-        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 2);
         return registration;
     }
 }

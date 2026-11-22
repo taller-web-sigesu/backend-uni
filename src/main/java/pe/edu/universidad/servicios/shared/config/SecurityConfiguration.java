@@ -3,14 +3,20 @@ package pe.edu.universidad.servicios.shared.config;
 import java.time.Clock;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -37,6 +43,31 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    SecurityFilterChain telemetrySecurityFilterChain(HttpSecurity http, PasswordEncoder encoder,
+            @Value("${app.telemetry.password-hash}") String passwordHash) throws Exception {
+        var collectors = new InMemoryUserDetailsManager();
+        if (!passwordHash.isBlank()) {
+            collectors.createUser(User.withUsername("prometheus").password(passwordHash).roles("TELEMETRY").build());
+        }
+        var provider = new DaoAuthenticationProvider(collectors);
+        provider.setPasswordEncoder(encoder);
+        http.securityMatcher("/actuator", "/actuator/**")
+                .authenticationManager(new ProviderManager(provider))
+                .csrf(csrf -> csrf.disable())
+                .logout(logout -> logout.disable())
+                .requestCache(cache -> cache.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(basic -> basic.realmName("Gestal telemetry"))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/actuator/prometheus", "/actuator/metrics",
+                                "/actuator/metrics/**", "/actuator/info").hasRole("TELEMETRY")
+                        .anyRequest().denyAll());
+        return http.build();
+    }
+
+    @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AccessTokenService tokens, UserSessionRepository sessions,
             ProblemResponseWriter problems, Clock clock) throws Exception {
         http
@@ -49,7 +80,7 @@ public class SecurityConfiguration {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/status", "/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/status").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers("/error").permitAll()
