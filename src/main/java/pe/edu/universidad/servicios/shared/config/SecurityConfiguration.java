@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -52,9 +53,11 @@ public class SecurityConfiguration {
         }
         var provider = new DaoAuthenticationProvider(collectors);
         provider.setPasswordEncoder(encoder);
+        var csrfTokens = new CookieCsrfTokenRepository();
+        csrfTokens.setCookiePath("/actuator");
         http.securityMatcher("/actuator", "/actuator/**")
                 .authenticationManager(new ProviderManager(provider))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokens))
                 .logout(logout -> logout.disable())
                 .requestCache(cache -> cache.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

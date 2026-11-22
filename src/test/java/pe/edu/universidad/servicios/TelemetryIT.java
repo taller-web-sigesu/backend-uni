@@ -84,7 +84,11 @@ class TelemetryIT extends IntegrationTest {
             assertThat(withBasic("GET", path, "clave-incorrecta").status()).isEqualTo(401);
             assertThat(withBasic("GET", path, COLLECTOR_PASSWORD).status()).isEqualTo(200);
         }
-        assertThat(withBasic("POST", "/actuator/prometheus", COLLECTOR_PASSWORD).status()).isEqualTo(403);
+        Response write = withBasic("POST", "/actuator/prometheus", COLLECTOR_PASSWORD);
+        assertThat(write.status()).isEqualTo(403);
+        assertThat(write.headers().allValues("Set-Cookie"))
+                .anyMatch(cookie -> cookie.startsWith("XSRF-TOKEN=") && cookie.contains("Path=/actuator"))
+                .noneMatch(cookie -> cookie.startsWith("JSESSIONID="));
         assertThat(withBasic("GET", "/actuator/env", COLLECTOR_PASSWORD).status()).isEqualTo(403);
         assertThat(withBasic("GET", "/actuator", COLLECTOR_PASSWORD).status()).isEqualTo(403);
         assertThat(withBasic("HEAD", "/actuator/prometheus", COLLECTOR_PASSWORD).status()).isEqualTo(403);

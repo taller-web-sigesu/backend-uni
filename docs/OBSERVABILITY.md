@@ -6,6 +6,8 @@ Prometheus usa `GET /actuator/prometheus` con Basic Auth sobre HTTPS o loopback 
 
 `GET /actuator/health` conserva la respuesta pública mínima con `status` y los nombres de grupos disponibles para Compose y staging. La respuesta omite detalles y componentes internos. `GET /api/v1/status` conserva su contrato público.
 
+Actuator admite únicamente las lecturas autorizadas por su cadena. Spring Security aplica CSRF a los métodos de escritura y usa una cookie limitada a `/actuator` para mantener la cadena sin sesión del servidor. El scrape mediante `GET` funciona con la credencial de recolección.
+
 ## Métricas
 
 | Serie Prometheus | Unidad | Etiquetas | Semántica |
