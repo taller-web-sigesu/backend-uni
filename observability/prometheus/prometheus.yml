@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files: [gestal.rules.yml]
+
+scrape_configs:
+  - job_name: gestal-backend
+    metrics_path: /actuator/prometheus
+    basic_auth:
+      username: prometheus
+      password_file: /run/secrets/gestal_scrape_password
+    static_configs:
+      - targets: [backend:8080]
+  - job_name: gestal-health
+    metrics_path: /probe
+    params:
+      module: [gestal_health]
+    static_configs:
+      - targets: [http://backend:8080/actuator/health]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+  - job_name: gestal-deploy
+    scrape_interval: 120s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: [deploy:9101]
