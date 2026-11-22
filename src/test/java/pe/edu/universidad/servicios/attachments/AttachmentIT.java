@@ -221,6 +221,7 @@ class AttachmentIT extends IntegrationTest {
         String attachment = upload(id, studentToken, "f.jpg", "image/jpeg", jpeg(100)).text("id");
         String otherToken = api.token(data.user("ESTUDIANTE", null));
 
+        assertThat(upload(id, otherToken, "ajeno.jpg", "image/jpeg", jpeg(100)).status()).isEqualTo(404);
         assertThat(api.get("/api/v1/requests/" + id + "/attachments", otherToken).status()).isEqualTo(404);
         assertThat(api.download("/api/v1/requests/" + id + "/attachments/" + attachment + "/content", otherToken).statusCode())
                 .isEqualTo(404);

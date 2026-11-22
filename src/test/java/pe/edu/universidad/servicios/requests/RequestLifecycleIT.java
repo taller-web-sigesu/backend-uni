@@ -126,7 +126,12 @@ class RequestLifecycleIT extends IntegrationTest {
         String otherToken = api.token(otherStudent);
 
         assertThat(api.get("/api/v1/requests/" + id, otherToken).status()).isEqualTo(404);
+        assertThat(api.get("/api/v1/requests/" + id + "/history", otherToken).status()).isEqualTo(404);
         assertThat(api.get("/api/v1/requests/" + id + "/comments", otherToken).status()).isEqualTo(404);
+        assertThat(api.post("/api/v1/requests/" + id + "/comments", otherToken,
+                Map.of("contenido", "Comentario de otra cuenta ficticia.")).status()).isEqualTo(404);
+        assertThat(api.get("/api/v1/requests/" + id + "/comments", studentToken).json()
+                .get("totalElements").asLong()).isZero();
         assertThat(api.get("/api/v1/requests", otherToken).json().get("totalElements").asLong()).isZero();
         assertThat(api.get("/api/v1/requests/" + id, api.token(otherTechnician)).status()).isEqualTo(404);
         assertThat(api.get("/api/v1/requests/" + id, api.token(otherSupervisor)).status()).isEqualTo(404);

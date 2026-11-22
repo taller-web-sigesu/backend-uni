@@ -72,6 +72,7 @@ class TelemetryIT extends IntegrationTest {
         assertThat(health.header("X-Correlation-ID")).isPresent();
 
         String admin = api.token(data.user("ADMINISTRADOR", null));
+        String student = api.token(data.user("ESTUDIANTE", null));
         for (String path : new String[] {"/actuator/prometheus", "/actuator/info", "/actuator/metrics",
                 "/actuator/metrics/jvm.memory.used"}) {
             Response anonymous = api.get(path, null);
@@ -79,11 +80,15 @@ class TelemetryIT extends IntegrationTest {
             assertThat(anonymous.header("WWW-Authenticate").orElseThrow()).startsWith("Basic");
             assertThat(anonymous.header("X-Correlation-ID")).isPresent();
             assertThat(api.get(path, admin).status()).isEqualTo(401);
+            assertThat(api.get(path, student).status()).isEqualTo(401);
             assertThat(withBasic("GET", path, "clave-incorrecta").status()).isEqualTo(401);
             assertThat(withBasic("GET", path, COLLECTOR_PASSWORD).status()).isEqualTo(200);
         }
         assertThat(withBasic("POST", "/actuator/prometheus", COLLECTOR_PASSWORD).status()).isEqualTo(403);
         assertThat(withBasic("GET", "/actuator/env", COLLECTOR_PASSWORD).status()).isEqualTo(403);
+        assertThat(withBasic("GET", "/actuator", COLLECTOR_PASSWORD).status()).isEqualTo(403);
+        assertThat(withBasic("HEAD", "/actuator/prometheus", COLLECTOR_PASSWORD).status()).isEqualTo(403);
+        assertThat(withBasic("OPTIONS", "/actuator/prometheus", COLLECTOR_PASSWORD).status()).isEqualTo(403);
         assertThat(withBasic("GET", "/api/v1/requests", COLLECTOR_PASSWORD).status()).isEqualTo(401);
     }
 
