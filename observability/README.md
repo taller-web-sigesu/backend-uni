@@ -29,7 +29,60 @@ El monitor de deploy hace una consulta de solo lectura al repositorio público d
 | `GestalDeploymentFailed` | Confirmar valor 1 durante 1 min y scrape UP. Tomar el valor de `gestal_deployment_workflow_run_id` y abrir la ejecución en [Actions](https://github.com/taller-web-sigesu/backend-uni/actions/workflows/deploy-production.yml). | Revisar qué paso falló (hook, espera o smoke), su SHA y el evento de Render. Verificar la revisión que sirve tráfico. | Corregir el paso con el responsable de producción. Según el estado de Render, restaurar la última revisión estable o reejecutar el flujo aprobado. Confirmar una nueva ejecución exitosa y el smoke contra la revisión esperada. |
 | `GestalLoginRejectionsHigh` | Confirmar que la suma de `increase(gestal_auth_login_rejections_total[5m])` para ambos motivos llega a 20 durante 2 min. | Separar `invalid_credentials` y `rate_limited`. Revisar cambios de cliente, salud y registros de acceso autorizados sin incluir credenciales ni datos de cuentas. | Corregir reintentos del cliente o escalar el abuso confirmado. Mantener los controles de autenticación y confirmar una ventana normal con una cuenta demo. |
 
-Para correlacionar una petición, enviar `GET /api/v1/status` con un `X-Correlation-ID` ficticio. Conservar código HTTP y cabecera de respuesta, buscar la línea JSON en `docker compose logs backend` y consultar su `traceId` en Grafana → Explore → Gestal Tempo. Comparar `spanId` con el span de esa petición. En la evidencia usar únicamente los campos de correlación, la ruta de prueba, la hora y el estado.
+### Correlacionar una petición con Grafana Viewer
+
+Desde el directorio del proyecto Compose que ejecuta `backend`, usar PowerShell 7. Ajustar `$backend` al puerto local publicado. La consulta a Tempo usa la fuente `gestal-tempo` a través de Grafana. Enviar el GET sin credenciales ni cookies para usar el acceso anónimo Viewer del Compose local.
+
+```powershell
+$backend = 'http://127.0.0.1:8080'
+$grafana = 'http://127.0.0.1:3001'
+$correlationId = [guid]::NewGuid().ToString()
+$respuesta = Invoke-WebRequest "$backend/api/v1/status" -TimeoutSec 10 -Headers @{
+    'X-Correlation-ID' = $correlationId
+}
+if ($respuesta.StatusCode -ne 200 -or $respuesta.Headers['X-Correlation-ID'][0] -ne $correlationId) {
+    throw 'La respuesta del backend no coincide con la petición'
+}
+
+$log = docker compose logs --no-log-prefix backend |
+    Select-String -SimpleMatch $correlationId |
+    ForEach-Object { $_.Line | ConvertFrom-Json } |
+    Where-Object correlationId -eq $correlationId |
+    Select-Object -Last 1
+if ($log.traceId -notmatch '^[0-9a-f]{32}$' -or $log.spanId -notmatch '^[0-9a-f]{16}$') {
+    throw 'Faltan los identificadores de la petición en el log JSON'
+}
+
+$url = "$grafana/api/datasources/proxy/uid/gestal-tempo/api/traces/$($log.traceId)"
+for ($intento = 1; $intento -le 10; $intento++) {
+    $consulta = Invoke-WebRequest $url -SkipHttpErrorCheck -TimeoutSec 10 -MaximumRedirection 0
+    if ($consulta.StatusCode -ne 404) { break }
+    if ($intento -lt 10) { Start-Sleep -Seconds 2 }
+}
+if ($consulta.StatusCode -ne 200) {
+    throw "La consulta de trazas en Grafana devolvió HTTP $($consulta.StatusCode)"
+}
+
+$traza = $consulta.Content | ConvertFrom-Json
+$grupos = $traza.batches ?? $traza.resourceSpans
+$traceIdBase64 = [Convert]::ToBase64String([Convert]::FromHexString($log.traceId))
+$spanIdBase64 = [Convert]::ToBase64String([Convert]::FromHexString($log.spanId))
+$span = $grupos.scopeSpans.spans | Where-Object {
+    ($_.traceId -cin @($log.traceId, $traceIdBase64)) -and
+    ($_.spanId -cin @($log.spanId, $spanIdBase64))
+} | Select-Object -First 1
+if (-not $span) { throw 'Tempo no devolvió el traceId y spanId del log en un mismo span' }
+
+[pscustomobject]@{
+    backendHttp  = $respuesta.StatusCode
+    grafanaHttp  = $consulta.StatusCode
+    correlationId = $log.correlationId
+    traceId       = $log.traceId
+    spanId        = $log.spanId
+} | ConvertTo-Json
+```
+
+El reintento con HTTP 404 da tiempo al envío OTLP. Para la evidencia, guardar la salida de este bloque, la ruta probada y la hora. Si la consulta falla, registrar el código devuelto y revisar `gestal-tempo`, el muestreo y la recepción OTLP.
 
 ## Retención
 
