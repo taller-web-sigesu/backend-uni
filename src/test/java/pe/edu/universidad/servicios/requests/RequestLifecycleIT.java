@@ -187,6 +187,60 @@ class RequestLifecycleIT extends IntegrationTest {
     }
 
     @Test
+    void supervisorRechazaDuplicadoYConservaElOriginal() {
+        String originalId = createRequest(studentToken);
+        String duplicateId = createRequest(studentToken);
+        assertThat(duplicateId).isNotEqualTo(originalId);
+        String originalCode = api.get("/api/v1/requests/" + originalId, studentToken).text("codigo");
+        String reason = "Duplicado de " + originalCode + ".";
+
+        Response rejected = api.patch("/api/v1/requests/" + duplicateId + "/status", supervisorToken,
+                Map.of("estado", "RECHAZADO", "motivo", reason));
+        assertThat(rejected.status()).isEqualTo(200);
+        assertThat(rejected.text("estado")).isEqualTo("RECHAZADO");
+        Response history = api.get("/api/v1/requests/" + duplicateId + "/history", studentToken);
+        assertThat(history.status()).isEqualTo(200);
+        assertThat(history.json().get("items").valueStream()
+                .filter(event -> "RECHAZADO".equals(event.get("estado").asString()))
+                .map(event -> event.get("motivo").asString()).toList()).containsExactly(reason);
+        assertThat(api.get("/api/v1/requests/" + originalId, studentToken).text("estado")).isEqualTo("NUEVO");
+    }
+
+    @Test
+    void reporteMalDirigidoSeRechazaYElNuevoLlegaAlAreaCorrecta() {
+        long correctArea = data.jdbc().sql("SELECT id FROM areas WHERE codigo = 'SERVICIOS_GENERALES'")
+                .query(Long.class).single();
+        long correctCategory = data.jdbc().sql("SELECT id FROM categorias WHERE codigo = 'SERVICIOS_GENERALES'")
+                .query(Long.class).single();
+        String correctSupervisorToken = api.token(data.user("SUPERVISOR", correctArea));
+        String wrongId = createRequest(studentToken);
+        String wrongCode = api.get("/api/v1/requests/" + wrongId, studentToken).text("codigo");
+        String reason = "Corresponde a Servicios generales. Registre el reporte con esa categoría.";
+
+        Response rejected = api.patch("/api/v1/requests/" + wrongId + "/status", supervisorToken,
+                Map.of("estado", "RECHAZADO", "motivo", reason));
+        assertThat(rejected.status()).isEqualTo(200);
+        Response original = api.get("/api/v1/requests/" + wrongId, studentToken);
+        assertThat(original.text("motivoRechazo")).isEqualTo(reason);
+
+        Response corrected = api.post("/api/v1/requests", studentToken, Map.of(
+                "categoriaId", String.valueOf(correctCategory), "ubicacion", "Pabellón B, aula 204",
+                "descripcion", "Nuevo reporte de " + wrongCode));
+        assertThat(corrected.status()).isEqualTo(201);
+        assertThat(corrected.text("codigo")).isNotEqualTo(wrongCode);
+        assertThat(corrected.text("areaId")).isEqualTo(String.valueOf(correctArea));
+        assertThat(ids(api.get("/api/v1/requests", correctSupervisorToken)))
+                .contains(corrected.text("id")).doesNotContain(wrongId);
+        assertThat(ids(api.get("/api/v1/requests", supervisorToken)))
+                .contains(wrongId).doesNotContain(corrected.text("id"));
+        Response history = api.get("/api/v1/requests/" + wrongId + "/history", studentToken);
+        assertThat(history.status()).isEqualTo(200);
+        assertThat(history.json().get("items").valueStream()
+                .filter(event -> "RECHAZADO".equals(event.get("estado").asString()))
+                .map(event -> event.get("motivo").asString()).toList()).containsExactly(reason);
+    }
+
+    @Test
     void asignacionValidaTecnicoYReasignacionConservaEstado() {
         String id = createRequest(studentToken);
         Account foreignTech = data.user("TECNICO", data.area());
@@ -194,8 +248,13 @@ class RequestLifecycleIT extends IntegrationTest {
                 Map.of("tecnicoId", String.valueOf(foreignTech.id()))).status()).isEqualTo(400);
         assertThat(api.post("/api/v1/requests/" + id + "/assignments", api.token(otherSupervisor),
                 Map.of("tecnicoId", String.valueOf(technician.id()))).status()).isEqualTo(404);
+        String adminToken = api.token(data.user("ADMINISTRADOR", null));
+        assertThat(api.post("/api/v1/requests/" + id + "/assignments", adminToken,
+                Map.of("tecnicoId", String.valueOf(technician.id()))).status()).isEqualTo(403);
 
-        api.post("/api/v1/requests/" + id + "/assignments", supervisorToken, Map.of("tecnicoId", String.valueOf(technician.id())));
+        Response assigned = api.post("/api/v1/requests/" + id + "/assignments", supervisorToken,
+                Map.of("tecnicoId", String.valueOf(technician.id())));
+        assertThat(assigned.status()).isEqualTo(201);
         api.patch("/api/v1/requests/" + id + "/status", technicianToken, Map.of("estado", "EN_PROCESO"));
         Response reassigned = api.post("/api/v1/requests/" + id + "/assignments", supervisorToken,
                 Map.of("tecnicoId", String.valueOf(otherTechnician.id())));
