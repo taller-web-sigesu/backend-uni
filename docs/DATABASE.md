@@ -13,6 +13,8 @@
 
 JPA no crea tablas (`spring-boot-starter-jdbc`, sin Hibernate). Una base vacía se migra al arrancar y un segundo arranque no reaplica nada (verificado por `scripts/smoke-image.sh`).
 
+Para aplicar la política de sesión única durante un despliegue con varias instancias, retira del tráfico de inicio de sesión las instancias de la versión anterior antes de ejecutar la consolidación. Así se evita que la versión antigua emita varias sesiones activas después de la migración.
+
 ## Ajustes respecto del Anexo A
 
 | Tema | Cambio | Motivo |

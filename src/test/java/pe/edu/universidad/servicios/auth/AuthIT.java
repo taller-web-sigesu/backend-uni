@@ -3,6 +3,7 @@ package pe.edu.universidad.servicios.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,8 +12,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.junit.jupiter.api.Test;
+import javax.sql.DataSource;
 
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+
+import pe.edu.universidad.servicios.auth.repository.UserSessionRepository;
+import pe.edu.universidad.servicios.auth.security.RefreshTokenCodec;
 import pe.edu.universidad.servicios.support.Api.Response;
 import pe.edu.universidad.servicios.support.IntegrationTest;
 import pe.edu.universidad.servicios.support.TestData.Account;
@@ -23,6 +31,12 @@ import pe.edu.universidad.servicios.support.TestData.Account;
 class AuthIT extends IntegrationTest {
 
     private static final Map<String, String> ORIGIN_OK = Map.of("Origin", "http://localhost:3000");
+
+    @Autowired
+    private DataSource datasource;
+
+    @Autowired
+    private UserSessionRepository sessions;
 
     @Test
     void migracionesCreanVistasYSemillas() {
@@ -69,6 +83,81 @@ class AuthIT extends IntegrationTest {
         assertThat(wrong.text("detail")).isEqualTo(inactive.text("detail"));
         assertThat(wrong.header("Content-Type").orElse("")).contains("application/problem+json");
         assertThat(wrong.text("correlationId")).isNotBlank();
+    }
+
+    @Test
+    void segundoIngresoRevocaJwtYRefreshDeLaSesionAnterior() {
+        Account student = data.user("ESTUDIANTE", null);
+        Response first = api.login(student.correo(), student.password());
+        Response second = api.login(student.correo(), student.password());
+
+        assertThat(first.status()).isEqualTo(200);
+        assertThat(second.status()).isEqualTo(200);
+        assertThat(api.get("/api/v1/requests", first.text("tokenAcceso")).status()).isEqualTo(401);
+        assertThat(refresh(first).status()).isEqualTo(401);
+        assertThat(api.get("/api/v1/requests", second.text("tokenAcceso")).status()).isEqualTo(200);
+        assertThat(refresh(second).status()).isEqualTo(200);
+    }
+
+    @Test
+    void ingresoInvalidoConservaLaSesionActual() {
+        Account student = data.user("ESTUDIANTE", null);
+        Response login = api.login(student.correo(), student.password());
+        assertThat(login.status()).isEqualTo(200);
+
+        assertThat(api.login(student.correo(), "Incorrecta123").status()).isEqualTo(401);
+        assertThat(api.get("/api/v1/requests", login.text("tokenAcceso")).status()).isEqualTo(200);
+        assertThat(refresh(login).status()).isEqualTo(200);
+    }
+
+    @Test
+    void ingresosConcurrentesDejanUnaSolaSesionVigente() throws Exception {
+        Account student = data.user("ESTUDIANTE", null);
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            Callable<Response> login = () -> api.login(student.correo(), student.password());
+            List<Integer> accessStatuses = new ArrayList<>();
+            for (Future<Response> future : pool.invokeAll(List.of(login, login))) {
+                Response response = future.get();
+                assertThat(response.status()).isEqualTo(200);
+                accessStatuses.add(api.get("/api/v1/requests", response.text("tokenAcceso")).status());
+            }
+            assertThat(accessStatuses).containsExactlyInAnyOrder(200, 401);
+        }
+    }
+
+    @Test
+    void migracionConservaLaUltimaSesionVigentePorCuenta() {
+        Account student = data.user("ESTUDIANTE", null);
+        Account other = data.user("ESTUDIANTE", null);
+        Instant now = Instant.now();
+        Instant issued = now.minusSeconds(600);
+        Instant expires = now.plusSeconds(3600);
+        long first = insertSession(student.id(), issued, expires);
+        long latest = insertSession(student.id(), issued, expires);
+        long earlierIssue = insertSession(student.id(), issued.minusSeconds(60), expires);
+        long revoked = insertSession(student.id(), now.minusSeconds(60), expires);
+        sessions.revoke(revoked, now.minusSeconds(30));
+        long expired = insertSession(student.id(), issued.minusSeconds(3600), now.minusSeconds(1800));
+        long separate = insertSession(other.id(), issued, expires);
+
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/R__consolidar_sesiones_vigentes.sql"))
+                .execute(datasource);
+
+        assertThat(sessions.lockById(first).orElseThrow().revocadaEn()).isNotNull();
+        assertThat(sessions.lockById(earlierIssue).orElseThrow().revocadaEn()).isNotNull();
+        assertThat(sessions.lockById(latest).orElseThrow().isActive(now)).isTrue();
+        assertThat(sessions.lockById(revoked).orElseThrow().isActive(now)).isFalse();
+        assertThat(sessions.lockById(expired).orElseThrow().revocadaEn()).isNull();
+        assertThat(sessions.lockById(separate).orElseThrow().isActive(now)).isTrue();
+    }
+
+    private Response refresh(Response login) {
+        return api.send("POST", "/api/v1/auth/refresh", null, null,
+                Map.of("Cookie", "refresh_token=" + login.refreshCookie()));
+    }
+
+    private long insertSession(long userId, Instant issued, Instant expires) {
+        return sessions.insert(userId, RefreshTokenCodec.hash(RefreshTokenCodec.generate()), issued, expires, null, null);
     }
 
     @Test
