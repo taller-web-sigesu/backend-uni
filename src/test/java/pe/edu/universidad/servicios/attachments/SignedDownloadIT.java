@@ -3,6 +3,8 @@ package pe.edu.universidad.servicios.attachments;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -39,8 +41,17 @@ class SignedDownloadIT extends IntegrationTest {
                 AttachmentIT.jpeg(100));
         assertThat(created.status()).as(created.toString()).isEqualTo(201);
 
-        HttpResponse<byte[]> download = api.download("/api/v1/requests/" + id + "/attachments/" + created.text("id") + "/content",
-                token);
+        String contentPath = "/api/v1/requests/" + id + "/attachments/" + created.text("id") + "/content";
+        String otherStudent = api.token(data.user("ESTUDIANTE", null));
+        HttpResponse<byte[]> anonymous = api.download(contentPath, null);
+        HttpResponse<byte[]> outsideScope = api.download(contentPath, otherStudent);
+        assertThat(anonymous.statusCode()).isEqualTo(401);
+        assertThat(anonymous.headers().firstValue("Location")).isEmpty();
+        assertThat(outsideScope.statusCode()).isEqualTo(404);
+        assertThat(outsideScope.headers().firstValue("Location")).isEmpty();
+        verify(storage, never()).signedDownloadUrl(anyString(), any());
+
+        HttpResponse<byte[]> download = api.download(contentPath, token);
 
         assertThat(download.statusCode()).isEqualTo(302);
         assertThat(download.headers().firstValue("Location")).contains(signed.toString());

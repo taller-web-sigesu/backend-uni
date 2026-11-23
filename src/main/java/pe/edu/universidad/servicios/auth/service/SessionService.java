@@ -14,6 +14,7 @@ import pe.edu.universidad.servicios.auth.security.AccessTokenService;
 import pe.edu.universidad.servicios.auth.security.RefreshTokenCodec;
 import pe.edu.universidad.servicios.shared.config.AppProperties;
 import pe.edu.universidad.servicios.shared.error.ApiException;
+import pe.edu.universidad.servicios.shared.telemetry.BusinessMetrics;
 import pe.edu.universidad.servicios.users.repository.UserRecord;
 import pe.edu.universidad.servicios.users.service.UserIdentityService;
 import pe.edu.universidad.servicios.users.service.UserIdentityService.AuthenticationResult;
@@ -31,9 +32,11 @@ public class SessionService {
     private final TransactionTemplate tx;
     private final Clock clock;
     private final Duration refreshTtl;
+    private final BusinessMetrics metrics;
 
     public SessionService(UserIdentityService identity, UserSessionRepository sessions, AccessTokenService accessTokens,
-            LoginAttemptLimiter limiter, TransactionTemplate tx, Clock clock, AppProperties properties) {
+            LoginAttemptLimiter limiter, TransactionTemplate tx, Clock clock, AppProperties properties,
+            BusinessMetrics metrics) {
         this.identity = identity;
         this.sessions = sessions;
         this.accessTokens = accessTokens;
@@ -41,11 +44,13 @@ public class SessionService {
         this.tx = tx;
         this.clock = clock;
         this.refreshTtl = properties.security().refreshTokenTtl();
+        this.metrics = metrics;
     }
 
     public IssuedSession login(String correo, String contrasena, String ip, String userAgent) {
         String key = UserIdentityService.normalizeEmail(correo) + "|" + ip;
         if (limiter.isBlocked(key)) {
+            metrics.blockedLogin();
             throw ApiException.tooManyRequests("Se superó el número de intentos. Intente más tarde.");
         }
         UserRecord authenticated = switch (identity.authenticate(correo, contrasena)) {
@@ -56,6 +61,7 @@ public class SessionService {
                     "Tu solicitud de cuenta fue rechazada. Comunícate con la administración.");
             case AuthenticationResult.Invalid i -> {
                 limiter.recordFailure(key);
+                metrics.invalidLogin();
                 throw invalidCredentials();
             }
         };

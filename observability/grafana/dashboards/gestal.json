@@ -1,0 +1,473 @@
+{
+  "uid": "gestal-backend",
+  "title": "Gestal · Backend",
+  "description": "Observabilidad local de Fase IV",
+  "tags": [
+    "gestal",
+    "fase-iv"
+  ],
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Disponibilidad",
+      "description": "La sonda exige HTTP 200 y estado UP.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_success{job=\"gestal-health\"}",
+          "legendFormat": "Sonda",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Tráfico HTTP",
+      "description": "Peticiones por segundo en /api/v1, ventana de 5 min.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gestal:http_requests_per_second:rate5m",
+          "legendFormat": "API",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Errores HTTP 5xx",
+      "description": "Fracción de respuestas 5xx sobre el tráfico de la API en 5 min.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gestal:http_5xx_ratio:rate5m",
+          "legendFormat": "5xx",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Latencia HTTP p95",
+      "description": "Percentil del histograma de la API, ventana de 5 min.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gestal:http_p95_seconds:rate5m",
+          "legendFormat": "p95",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Memoria JVM",
+      "description": "Memoria usada y máximo publicado por área.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (area) (jvm_memory_used_bytes{job=\"gestal-backend\"})",
+          "legendFormat": "Uso {{area}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (area) (jvm_memory_max_bytes{job=\"gestal-backend\"} > 0)",
+          "legendFormat": "Máximo {{area}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "CPU y actividad JVM",
+      "description": "CPU del proceso y el sistema como fracción de 0 a 1. Los hilos se muestran en un panel aparte.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_cpu_usage{job=\"gestal-backend\"}",
+          "legendFormat": "Proceso",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "system_cpu_usage{job=\"gestal-backend\"}",
+          "legendFormat": "Sistema",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Hilos JVM",
+      "description": "Hilos vivos por instancia.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "jvm_threads_live_threads{job=\"gestal-backend\"}",
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Saturación Hikari",
+      "description": "Conexiones activas divididas entre el máximo de cada pool.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gestal:hikari_utilization:ratio",
+          "legendFormat": "{{pool}} · {{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Conexiones Hikari",
+      "description": "Conexiones activas, ociosas y peticiones esperando una conexión.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_active{job=\"gestal-backend\"}",
+          "legendFormat": "Activas {{pool}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "hikaricp_connections_idle{job=\"gestal-backend\"}",
+          "legendFormat": "Ociosas {{pool}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "hikaricp_connections_pending{job=\"gestal-backend\"}",
+          "legendFormat": "En espera {{pool}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Operaciones confirmadas",
+      "description": "Altas de solicitudes y reservas confirmadas en MySQL durante los últimos 5 min.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (operation) (increase(gestal_business_operations_total{job=\"gestal-backend\"}[5m]))",
+          "legendFormat": "{{operation}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Rechazos de inicio de sesión",
+      "description": "Intentos rechazados durante los últimos 5 min por motivo.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 21,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (reason) (increase(gestal_auth_login_rejections_total{job=\"gestal-backend\"}[5m]))",
+          "legendFormat": "{{reason}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Resultado del workflow de despliegue",
+      "description": "0 = éxito, 1 = fallo. Un hueco indica que el resultado es desconocido.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gestal-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 21,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gestal_deployment_workflow_failed{job=\"gestal-deploy\"}",
+          "legendFormat": "Fallo",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "up{job=\"gestal-deploy\"}",
+          "legendFormat": "Exportador accesible",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gestal-prometheus"
+          }
+        }
+      ]
+    }
+  ]
+}

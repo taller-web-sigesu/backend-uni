@@ -18,7 +18,7 @@ import pe.edu.universidad.servicios.support.IntegrationTest;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Comprueba que la API publicada expone las 55 operaciones de negocio más /status del diseño
+ * Comprueba que la API publicada expone las 63 operaciones de negocio más /status del diseño
  * y exporta el contrato generado a target/openapi.yaml para compararlo con docs/api/openapi.yaml.
  */
 class OpenApiContractIT extends IntegrationTest {
@@ -52,6 +52,21 @@ class OpenApiContractIT extends IntegrationTest {
             "GET /api/v1/admin/spaces/{id}/schedule", "PUT /api/v1/admin/spaces/{id}/schedule",
             "GET /api/v1/admin/reservation-policy", "PUT /api/v1/admin/reservation-policy",
             "GET /api/v1/status");
+
+    @Test
+    void swaggerEsPublicoYUsaElContratoDeLaApi() {
+        Response redirect = api.get("/swagger-ui.html", null);
+        assertThat(redirect.status()).isEqualTo(302);
+        assertThat(redirect.header("Location")).hasValueSatisfying(location ->
+                assertThat(location).endsWith("/swagger-ui/index.html"));
+        Response ui = api.get("/swagger-ui/index.html", null);
+        assertThat(ui.status()).isEqualTo(200);
+        assertThat(ui.header("Content-Type")).hasValueSatisfying(type ->
+                assertThat(type).startsWith("text/html"));
+        Response config = api.get("/v3/api-docs/swagger-config", null);
+        assertThat(config.status()).isEqualTo(200);
+        assertThat(config.text("url")).isEqualTo("/v3/api-docs");
+    }
 
     @Test
     void contratoPublicadoCubreLasOperacionesDelDiseno() throws IOException {

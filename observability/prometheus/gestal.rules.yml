@@ -1,0 +1,57 @@
+groups:
+  - name: gestal
+    rules:
+      - record: gestal:http_requests_per_second:rate5m
+        expr: sum(rate(http_server_requests_seconds_count{job="gestal-backend",uri=~"/api/v1(/.*)?"}[5m]))
+      - record: gestal:http_5xx_ratio:rate5m
+        expr: |
+          (sum(rate(http_server_requests_seconds_count{job="gestal-backend",uri=~"/api/v1(/.*)?",status=~"5.."}[5m]))
+           or 0 * gestal:http_requests_per_second:rate5m)
+          / (gestal:http_requests_per_second:rate5m > 0)
+      - record: gestal:http_p95_seconds:rate5m
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job="gestal-backend",uri=~"/api/v1(/.*)?"}[5m])))
+      - record: gestal:hikari_utilization:ratio
+        expr: hikaricp_connections_active{job="gestal-backend"} / (hikaricp_connections_max{job="gestal-backend"} > 0)
+
+      - alert: GestalHealthUnavailable
+        expr: probe_success{job="gestal-health"} == 0 or up{job="gestal-health"} == 0 or absent(up{job="gestal-health"})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Health de Gestal caído o sin sonda
+      - alert: GestalHttp5xxHigh
+        expr: gestal:http_5xx_ratio:rate5m > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Más de 1% de 5xx en la API
+      - alert: GestalHttpP95High
+        expr: gestal:http_p95_seconds:rate5m > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Latencia p95 de la API superior a 2 s
+      - alert: GestalPoolSaturated
+        expr: gestal:hikari_utilization:ratio > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Más de 80% del pool Hikari en uso
+      - alert: GestalDeploymentFailed
+        expr: gestal_deployment_workflow_failed{job="gestal-deploy"} == 1 and on (job, instance) up{job="gestal-deploy"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Falló la última ejecución completada de deploy-production
+      - alert: GestalLoginRejectionsHigh
+        expr: sum(increase(gestal_auth_login_rejections_total{job="gestal-backend",reason=~"invalid_credentials|rate_limited"}[5m])) >= 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Al menos 20 intentos de login rechazados en 5 min

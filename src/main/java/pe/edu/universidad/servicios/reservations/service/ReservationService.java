@@ -20,6 +20,7 @@ import pe.edu.universidad.servicios.reservations.repository.SpaceRepository;
 import pe.edu.universidad.servicios.reservations.repository.SpaceRepository.Space;
 import pe.edu.universidad.servicios.shared.error.ApiException;
 import pe.edu.universidad.servicios.shared.security.AuthenticatedActor;
+import pe.edu.universidad.servicios.shared.telemetry.BusinessMetrics;
 import pe.edu.universidad.servicios.shared.web.Ids;
 import pe.edu.universidad.servicios.users.service.UserIdentityService;
 
@@ -36,15 +37,17 @@ public class ReservationService {
     private final UserIdentityService identity;
     private final AuditEventService audit;
     private final Clock clock;
+    private final BusinessMetrics metrics;
 
     public ReservationService(ReservationRepository reservations, SpaceRepository spaces, SpaceConfigRepository config,
-            UserIdentityService identity, AuditEventService audit, Clock clock) {
+            UserIdentityService identity, AuditEventService audit, Clock clock, BusinessMetrics metrics) {
         this.reservations = reservations;
         this.spaces = spaces;
         this.config = config;
         this.identity = identity;
         this.audit = audit;
         this.clock = clock;
+        this.metrics = metrics;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -79,6 +82,7 @@ public class ReservationService {
         }
         reservations.insertHistory(id, null, pendiente, actor.userId(), null, now);
         audit.record("reservas", id, null, "CREAR", "estado", null, "PENDIENTE", actor.userId());
+        metrics.reservationCreated();
         return ReservationMapper.summary(reservations.findById(id).orElseThrow(), now);
     }
 
