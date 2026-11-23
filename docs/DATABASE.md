@@ -9,8 +9,11 @@
 | `V1__esquema_inicial.sql` | 26 tablas, 5 vistas, claves, checks e índices del Anexo A con los ajustes reconciliados de abajo. Sin `CREATE DATABASE` ni `USE`. |
 | `V2__catalogos_semilla.sql` | Roles, áreas, prioridades, estados y transiciones, categorías, políticas SLA, tipos y estados de reserva, espacios piloto con horario y política de reservas. |
 | `db/demo/V1000__datos_demostracion.sql` | Cuentas ficticias (contraseña `Demo2026!`). Solo se aplica con `APP_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/demo`. |
+| `db/demo/V1001__ambientes_y_cuentas_fase_iv.sql` | Agrega el Laboratorio 10 (Soporte informático), la cancha deportiva (Servicios generales) y dos cuentas ficticias de Servicios generales. Ambos espacios tienen horario de lunes a viernes de 07:00 a 22:00 (Lima). Se aplica con `db/demo` habilitado, incluso en bases que ya aplicaron `V1000`. |
 
 JPA no crea tablas (`spring-boot-starter-jdbc`, sin Hibernate). Una base vacía se migra al arrancar y un segundo arranque no reaplica nada (verificado por `scripts/smoke-image.sh`).
+
+Para aplicar la política de sesión única durante un despliegue con varias instancias, retira del tráfico de inicio de sesión las instancias de la versión anterior antes de ejecutar la consolidación. Así se evita que la versión antigua emita varias sesiones activas después de la migración.
 
 ## Ajustes respecto del Anexo A
 

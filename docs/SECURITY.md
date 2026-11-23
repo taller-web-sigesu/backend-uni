@@ -7,6 +7,7 @@
 | Elemento | Implementación |
 | --- | --- |
 | Credencial de negocio | `Authorization: Bearer <JWT>` HS256 de 15 minutos con `sub` (usuario) y `sid` (sesión). Secreto en `APP_JWT_SECRET` (mínimo 32 bytes). |
+| Sesión única | Un inicio válido comprueba que la cuenta y las credenciales sigan vigentes bajo bloqueo. En la misma transacción revoca las sesiones anteriores y emite la nueva. El JWT y la cookie de una sesión revocada dejan de autorizar peticiones. Un intento inválido conserva la sesión vigente. |
 | Vigencia por petición | `SessionAuthenticationFilter` lee la sesión y la cuenta en cada petición: sesión no revocada y sin vencer, cuenta `activo = 1` y `estado_cuenta = 'ACTIVA'`. Rol y área salen de la base, no del token. |
 | Refresh | Token opaco de 256 bits en cookie `refresh_token` (`HttpOnly`, `SameSite=Lax`, `Path=/api/v1/auth`, `Secure` salvo `APP_COOKIE_SECURE=false`). En base solo se guarda su SHA-256. Vigencia absoluta de 7 días que la rotación no amplía. |
 | Rotación y reúso | La rotación bloquea cuenta y sesión (`FOR UPDATE`) y guarda el hash consumido en `tokens_refresh_consumidos`. Presentar un hash consumido revoca la sesión en una transacción propia, ya confirmada cuando se responde 401. Dos renovaciones concurrentes: como máximo una prospera; la otra cuenta como reúso. |

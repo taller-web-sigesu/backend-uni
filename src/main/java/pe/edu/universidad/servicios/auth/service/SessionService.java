@@ -53,8 +53,8 @@ public class SessionService {
             metrics.blockedLogin();
             throw ApiException.tooManyRequests("Se superó el número de intentos. Intente más tarde.");
         }
-        long userId = switch (identity.authenticate(correo, contrasena)) {
-            case AuthenticationResult.Authenticated ok -> ok.user().id();
+        UserRecord authenticated = switch (identity.authenticate(correo, contrasena)) {
+            case AuthenticationResult.Authenticated ok -> ok.user();
             case AuthenticationResult.Pending p -> throw ApiException.forbidden("CUENTA_PENDIENTE",
                     "Tu cuenta está pendiente de aprobación por un administrador.");
             case AuthenticationResult.Rejected r -> throw ApiException.forbidden("CUENTA_RECHAZADA",
@@ -65,13 +65,19 @@ public class SessionService {
                 throw invalidCredentials();
             }
         };
-        limiter.reset(key);
-        return tx.execute(status -> {
-            // La cuenta se vuelve a leer bloqueada para no emitir con datos obsoletos ante una desactivación concurrente.
-            UserRecord user = identity.lock(userId).filter(UserRecord::canLogin).orElseThrow(SessionService::invalidCredentials);
-            identity.touchLastAccess(userId, clock.instant());
+        IssuedSession issued = tx.execute(status -> {
+            UserRecord user = identity.lock(authenticated.id())
+                    .filter(UserRecord::canLogin)
+                    .filter(current -> current.correo().equals(authenticated.correo())
+                            && current.hashContrasena().equals(authenticated.hashContrasena()))
+                    .orElseThrow(SessionService::invalidCredentials);
+            Instant now = clock.instant();
+            sessions.revokeAllForUser(user.id(), now);
+            identity.touchLastAccess(user.id(), now);
             return createSession(user, ip, userAgent);
         });
+        limiter.reset(key);
+        return issued;
     }
 
     /** Debe ejecutarse dentro de una transacción con la cuenta bloqueada. */
