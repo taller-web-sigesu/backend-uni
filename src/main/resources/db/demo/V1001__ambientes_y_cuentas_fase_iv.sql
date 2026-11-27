@@ -1,4 +1,5 @@
 -- Datos ficticios de Fase IV para entornos con db/demo habilitado.
+-- Migración idempotente: si los ambientes o las cuentas ya existen, no se duplican.
 INSERT INTO espacios
     (tipo_espacio_id, area_id, codigo, nombre, descripcion, pabellon, capacidad)
 SELECT t.id, a.id, demo.codigo, demo.nombre, demo.descripcion, demo.pabellon, demo.capacidad
@@ -11,7 +12,9 @@ FROM (
            'Cancha para actividades deportivas.', 'Zona deportiva', 40
 ) demo
 JOIN tipos_espacio t ON t.codigo = demo.tipo
-JOIN areas a ON a.codigo = demo.area;
+JOIN areas a ON a.codigo = demo.area
+LEFT JOIN espacios e ON e.codigo = demo.codigo
+WHERE e.id IS NULL;
 
 INSERT INTO horarios_espacio (espacio_id, dia_semana, hora_apertura, hora_cierre)
 SELECT e.id, d.dia, '07:00:00', '22:00:00'
@@ -20,7 +23,9 @@ CROSS JOIN (
     SELECT 1 AS dia UNION ALL SELECT 2 UNION ALL SELECT 3
     UNION ALL SELECT 4 UNION ALL SELECT 5
 ) d
-WHERE e.codigo IN ('LAB-10', 'CANCHA-01');
+LEFT JOIN horarios_espacio h ON h.espacio_id = e.id AND h.dia_semana = d.dia
+WHERE e.codigo IN ('LAB-10', 'CANCHA-01')
+  AND h.espacio_id IS NULL;
 
 -- Reutiliza el hash de la contraseña de demostración definida en V1000.
 INSERT INTO usuarios (rol_id, area_id, nombre_completo, correo, hash_contrasena, activo, estado_cuenta,
@@ -33,4 +38,6 @@ FROM (
     UNION ALL SELECT 'TECNICO', 'Técnico Demo Servicios Generales', 'tecnico.sg.demo@universidad.example'
 ) demo
 JOIN roles r ON r.codigo = demo.rol
-JOIN areas a ON a.codigo = 'SERVICIOS_GENERALES';
+JOIN areas a ON a.codigo = 'SERVICIOS_GENERALES'
+LEFT JOIN usuarios u ON u.correo = demo.correo
+WHERE u.id IS NULL;
